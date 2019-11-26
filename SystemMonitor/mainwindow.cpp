@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
+#include <QDebug>
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
@@ -20,6 +21,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->treeWidget->setColumnCount(5);
+    ui->treeWidget->setHeaderLabels(QStringList() << "Name" <<"State" << "%CPU" << "ID" << "Memory Used");
+    ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->treeWidget, &QTreeWidget::customContextMenuRequested, this, &MainWindow::right_click_menu);
 }
 
 MainWindow::~MainWindow()
@@ -30,6 +35,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_clicked()
 {
     ui->listWidget->clear();
+    ui->treeWidget->clear();
     ui->listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     QFile file("/proc/cpuinfo");
@@ -117,12 +123,74 @@ double calculateCpuTime(QString pidd) {
     QString systemTime = list2.at(2);
 
     bool ok = false;
-    double davkar = (uTime.toDouble(&ok) + sTime.toDouble(&ok)) / (userTime.toDouble(&ok) + niceTime.toDouble(&ok) + systemTime.toDouble(&ok));
-    return davkar;
+    double cpu_time = (uTime.toDouble(&ok) + sTime.toDouble(&ok)) / (userTime.toDouble(&ok) + niceTime.toDouble(&ok) + systemTime.toDouble(&ok));
+    return cpu_time;
+}
+
+//my implementation
+
+void MainWindow::AddParent(QString name, QString status, QString cpu, QString id, QString memory)
+{
+    QTreeWidgetItem *item = new QTreeWidgetItem();
+    item->setText(0, name);
+    item->setText(1, status);
+    item->setText(2, cpu);
+    item->setText(3, id);
+    item->setText(4, memory);
+    ui->treeWidget->addTopLevelItem(item);
+    MainWindow::AddChild(item, name, status, cpu, id, memory);
+}
+
+void MainWindow::AddChild (QTreeWidgetItem *parent, QString name, QString status, QString cpu, QString id, QString memory)
+{
+    QTreeWidgetItem *item = new QTreeWidgetItem();
+    item->setText(0, name);
+    item->setText(1, status);
+    item->setText(2, cpu);
+    item->setText(3, id);
+    item->setText(4, memory);
+    parent->addChild(item);
+}
+
+void MainWindow::right_click_menu(const QPoint &pos)
+{
+    QTreeWidget *tree = ui->treeWidget;
+    QTreeWidgetItem *item = tree->itemAt(pos);
+    qDebug() << pos << item->text(0);
+    QMenu menu(this);
+
+    QAction *action1 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Stop Process"), this);
+    action1->setStatusTip(tr("new sth"));
+    connect(action1, SIGNAL(triggered()), this, SLOT(newDev()));
+    menu.addAction(action1);
+
+    QAction *action2 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Continue Process"), this);
+    action2->setStatusTip(tr("new sth"));
+    connect(action2, SIGNAL(triggered()), this, SLOT(newDev()));
+    menu.addAction(action2);
+
+    QAction *action3 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Kill Process"), this);
+    action3->setStatusTip(tr("new sth"));
+    connect(action3, SIGNAL(triggered()), this, SLOT(newDev()));
+    menu.addAction(action3);
+
+    QAction *action4 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Memory Maps"), this);
+    action4->setStatusTip(tr("new sth"));
+    connect(action4, SIGNAL(triggered()), this, SLOT(newDev()));
+    menu.addAction(action4);
+
+    QAction *action5 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Open Files"), this);
+    action5->setStatusTip(tr("new sth"));
+    connect(action5, SIGNAL(triggered()), this, SLOT(newDev()));
+    menu.addAction(action5);
+
+    QPoint pt(pos);
+    menu.exec(tree->mapToGlobal(pos));
 }
 
 void MainWindow::on_pushButton_2_clicked()
 {
+    ui->treeWidget->clear();
     ui->listWidget->clear();
     struct dirent **namelist;
     int n;
@@ -156,22 +224,14 @@ void MainWindow::on_pushButton_2_clicked()
                 }
                 line = in.readLine();
             }
-            QString finalLine = name;
-            finalLine += "            ";
-            finalLine += status;
-            double amrish = calculateCpuTime(namelist[n]->d_name);
-            finalLine += "   CPU Time";
-            finalLine += ( QString::number(amrish));
-            finalLine += "   PID: ";
-            finalLine += namelist[n]->d_name;
-            finalLine += "   Memory Used: ";
+            double cpu = calculateCpuTime(namelist[n]->d_name);
+            QString cputime = QString::number(cpu);
+            QString id = namelist[n]->d_name;
             bool ok = false;
-            //double mmm = memSize.toDouble(&ok) / 1024;
-            //finalLine += ( QString::number(mmm));
             QStringList list = memSize.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-            finalLine += ( QString::number(list.at(1).toDouble(&ok) / 1024));
-            //finalLine += memSize;
-            ui->listWidget->addItem(finalLine);
+            QString memory = ( QString::number(list.at(1).toDouble(&ok) / 1024));
+
+            MainWindow::AddParent(name, status, cputime, id, memory);
             free(namelist[n]);
 
         }
@@ -179,4 +239,81 @@ void MainWindow::on_pushButton_2_clicked()
         free(namelist);
 
     }
+}
+
+//void MainWindow::on_pushButton_2_clicked()
+//{
+//    ui->treeWidget->clear();
+//    ui->treeWidget->clear();
+//    struct dirent **namelist;
+//    int n;
+//    n = scandir("/proc", &namelist, filter, 0);
+//    if (n < 0)
+//        perror("Not enough memory.");
+//    else {
+
+//        while(n--){
+
+//            QString filename = "/proc/";
+//            filename += (namelist[n]->d_name);
+//            filename += ("/status");
+//            QFile file(filename);
+//            if(!file.open(QIODevice::ReadOnly))
+//                QMessageBox::information(0, "info", file.errorString());
+//            QTextStream in(&file);
+//            QString line = in.readLine();
+//            QString name;
+//            QString status;
+//            QString memSize;
+//            while(!line.isNull()) {
+//                if (line.contains("Name", Qt::CaseInsensitive)) {
+//                    name = line;
+//                }
+//                if (line.contains("State", Qt::CaseInsensitive)) {
+//                    status = line;
+//                }
+//                if (line.contains("VmSize", Qt::CaseInsensitive)) {
+//                    memSize = line;
+//                }
+//                line = in.readLine();
+//            }
+//            QString finalLine = name;
+//            finalLine += "            ";
+//            finalLine += status;
+//            double amrish = calculateCpuTime(namelist[n]->d_name);
+//            finalLine += "   CPU Time";
+//            finalLine += ( QString::number(amrish));
+//            finalLine += "   PID: ";
+//            finalLine += namelist[n]->d_name;
+//            finalLine += "   Memory Used: ";
+//            bool ok = false;
+//            //double mmm = memSize.toDouble(&ok) / 1024;
+//            //finalLine += ( QString::number(mmm));
+//            QStringList list = memSize.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+//            finalLine += ( QString::number(list.at(1).toDouble(&ok) / 1024));
+//            //finalLine += memSize;
+//            //ui->treeWidget->addItem(finalLine);
+//            free(namelist[n]);
+
+//        }
+
+//        free(namelist);
+
+//    }
+//}
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    ui->treeWidget->clear();
+    ui->treeWidget->clear();
+    ui->treeWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+}
+
+void MainWindow::on_pushButton_4_clicked()
+{
+    ui->listWidget->clear();
+    ui->treeWidget->clear();
+    ui->listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    ui->listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 }
