@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_MainWindow_t {
-    QByteArrayData data[17];
-    char stringdata0[196];
+    QByteArrayData data[19];
+    char stringdata0[227];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -43,18 +43,21 @@ QT_MOC_LITERAL(8, 121, 6), // "status"
 QT_MOC_LITERAL(9, 128, 3), // "cpu"
 QT_MOC_LITERAL(10, 132, 2), // "id"
 QT_MOC_LITERAL(11, 135, 6), // "memory"
-QT_MOC_LITERAL(12, 142, 8), // "AddChild"
-QT_MOC_LITERAL(13, 151, 16), // "QTreeWidgetItem*"
-QT_MOC_LITERAL(14, 168, 6), // "parent"
-QT_MOC_LITERAL(15, 175, 16), // "right_click_menu"
-QT_MOC_LITERAL(16, 192, 3) // "pos"
+QT_MOC_LITERAL(12, 142, 4), // "ppid"
+QT_MOC_LITERAL(13, 147, 1), // "k"
+QT_MOC_LITERAL(14, 149, 8), // "AddChild"
+QT_MOC_LITERAL(15, 158, 16), // "QTreeWidgetItem*"
+QT_MOC_LITERAL(16, 175, 6), // "parent"
+QT_MOC_LITERAL(17, 182, 40), // "on_treeWidget_customContextMe..."
+QT_MOC_LITERAL(18, 223, 3) // "pos"
 
     },
     "MainWindow\0on_pushButton_clicked\0\0"
     "on_pushButton_2_clicked\0on_pushButton_3_clicked\0"
     "on_pushButton_4_clicked\0AddParent\0"
-    "name\0status\0cpu\0id\0memory\0AddChild\0"
-    "QTreeWidgetItem*\0parent\0right_click_menu\0"
+    "name\0status\0cpu\0id\0memory\0ppid\0k\0"
+    "AddChild\0QTreeWidgetItem*\0parent\0"
+    "on_treeWidget_customContextMenuRequested\0"
     "pos"
 };
 #undef QT_MOC_LITERAL
@@ -77,18 +80,18 @@ static const uint qt_meta_data_MainWindow[] = {
        3,    0,   50,    2, 0x08 /* Private */,
        4,    0,   51,    2, 0x08 /* Private */,
        5,    0,   52,    2, 0x08 /* Private */,
-       6,    5,   53,    2, 0x08 /* Private */,
-      12,    6,   64,    2, 0x08 /* Private */,
-      15,    1,   77,    2, 0x08 /* Private */,
+       6,    7,   53,    2, 0x08 /* Private */,
+      14,    6,   68,    2, 0x08 /* Private */,
+      17,    1,   81,    2, 0x08 /* Private */,
 
  // slots: parameters
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString,    7,    8,    9,   10,   11,
-    QMetaType::Void, 0x80000000 | 13, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString,   14,    7,    8,    9,   10,   11,
-    QMetaType::Void, QMetaType::QPoint,   16,
+    QMetaType::Int, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::Int,    7,    8,    9,   10,   11,   12,   13,
+    QMetaType::Void, 0x80000000 | 15, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString,   16,    7,    8,    9,   10,   11,
+    QMetaType::Void, QMetaType::QPoint,   18,
 
        0        // eod
 };
@@ -103,9 +106,10 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 1: _t->on_pushButton_2_clicked(); break;
         case 2: _t->on_pushButton_3_clicked(); break;
         case 3: _t->on_pushButton_4_clicked(); break;
-        case 4: _t->AddParent((*reinterpret_cast< QString(*)>(_a[1])),(*reinterpret_cast< QString(*)>(_a[2])),(*reinterpret_cast< QString(*)>(_a[3])),(*reinterpret_cast< QString(*)>(_a[4])),(*reinterpret_cast< QString(*)>(_a[5]))); break;
+        case 4: { int _r = _t->AddParent((*reinterpret_cast< QString(*)>(_a[1])),(*reinterpret_cast< QString(*)>(_a[2])),(*reinterpret_cast< QString(*)>(_a[3])),(*reinterpret_cast< QString(*)>(_a[4])),(*reinterpret_cast< QString(*)>(_a[5])),(*reinterpret_cast< QString(*)>(_a[6])),(*reinterpret_cast< int(*)>(_a[7])));
+            if (_a[0]) *reinterpret_cast< int*>(_a[0]) = std::move(_r); }  break;
         case 5: _t->AddChild((*reinterpret_cast< QTreeWidgetItem*(*)>(_a[1])),(*reinterpret_cast< QString(*)>(_a[2])),(*reinterpret_cast< QString(*)>(_a[3])),(*reinterpret_cast< QString(*)>(_a[4])),(*reinterpret_cast< QString(*)>(_a[5])),(*reinterpret_cast< QString(*)>(_a[6]))); break;
-        case 6: _t->right_click_menu((*reinterpret_cast< const QPoint(*)>(_a[1]))); break;
+        case 6: _t->on_treeWidget_customContextMenuRequested((*reinterpret_cast< const QPoint(*)>(_a[1]))); break;
         default: ;
         }
     }

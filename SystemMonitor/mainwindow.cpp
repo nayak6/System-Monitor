@@ -16,15 +16,17 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+struct dirent **listdir;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->treeWidget->setColumnCount(5);
-    ui->treeWidget->setHeaderLabels(QStringList() << "Name" <<"State" << "%CPU" << "ID" << "Memory Used");
+    ui->treeWidget->setColumnCount(6);
+    ui->treeWidget->setHeaderLabels(QStringList() << "Name" <<"State" << "%CPU" << "ID" << "Memory Used" <<"PPID");
     ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->treeWidget, &QTreeWidget::customContextMenuRequested, this, &MainWindow::right_click_menu);
+    connect(ui->treeWidget, &QTreeWidget::customContextMenuRequested, this, &MainWindow::on_treeWidget_customContextMenuRequested);
 }
 
 MainWindow::~MainWindow()
@@ -129,18 +131,31 @@ double calculateCpuTime(QString pidd) {
 
 //my implementation
 
-void MainWindow::AddParent(QString name, QString status, QString cpu, QString id, QString memory)
+//parent processes in a treewidget
+int MainWindow::AddParent(QString name, QString status, QString cpu, QString id, QString memory, QString ppid, int k)
 {
+    int count = 0;
     QTreeWidgetItem *item = new QTreeWidgetItem();
     item->setText(0, name);
     item->setText(1, status);
     item->setText(2, cpu);
     item->setText(3, id);
     item->setText(4, memory);
+    item->setText(5, ppid);
     ui->treeWidget->addTopLevelItem(item);
-    MainWindow::AddChild(item, name, status, cpu, id, memory);
+    //make a loop here and implement a counter for all the processes
+    //while subprocesses are there, addChild and increment count by 1.
+    //MainWindow::AddChild(item, name, status, cpu, id, memory);
+    //return the counter.
+
+//    int counter = k;
+//    while(counter--) {
+//        if(listname[counter]->d_name)
+//    }
+    return count;
 }
 
+//Child processes in a treewidget
 void MainWindow::AddChild (QTreeWidgetItem *parent, QString name, QString status, QString cpu, QString id, QString memory)
 {
     QTreeWidgetItem *item = new QTreeWidgetItem();
@@ -152,13 +167,15 @@ void MainWindow::AddChild (QTreeWidgetItem *parent, QString name, QString status
     parent->addChild(item);
 }
 
-void MainWindow::right_click_menu(const QPoint &pos)
+//Menu box on right clicking a process
+void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
 {
     QTreeWidget *tree = ui->treeWidget;
     QTreeWidgetItem *item = tree->itemAt(pos);
     qDebug() << pos << item->text(0);
     QMenu menu(this);
 
+    //NULL in place of SLOT(newDev())
     QAction *action1 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Stop Process"), this);
     action1->setStatusTip(tr("new sth"));
     connect(action1, SIGNAL(triggered()), this, SLOT(newDev()));
@@ -198,7 +215,7 @@ void MainWindow::on_pushButton_2_clicked()
     if (n < 0)
         perror("Not enough memory.");
     else {
-
+        int k = n;
         while(n--){
 
             QString filename = "/proc/";
@@ -209,18 +226,29 @@ void MainWindow::on_pushButton_2_clicked()
                 QMessageBox::information(0, "info", file.errorString());
             QTextStream in(&file);
             QString line = in.readLine();
+            QString ppid;
             QString name;
             QString status;
             QString memSize;
             while(!line.isNull()) {
                 if (line.contains("Name", Qt::CaseInsensitive)) {
+                    QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                    line = list.at(1);
                     name = line;
                 }
                 if (line.contains("State", Qt::CaseInsensitive)) {
+                    QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                    line = list.at(2);
                     status = line;
                 }
                 if (line.contains("VmSize", Qt::CaseInsensitive)) {
                     memSize = line;
+                }
+
+                if(line.contains("PPid", Qt::CaseInsensitive)) {
+                    QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                    line = list.at(1);
+                    ppid = line;
                 }
                 line = in.readLine();
             }
@@ -231,76 +259,20 @@ void MainWindow::on_pushButton_2_clicked()
             QStringList list = memSize.split(QRegExp("\\s+"), QString::SkipEmptyParts);
             QString memory = ( QString::number(list.at(1).toDouble(&ok) / 1024));
 
-            MainWindow::AddParent(name, status, cputime, id, memory);
-            free(namelist[n]);
+            //returns i number of subprocesses that we can subtract from the n count loop
+            int counter = MainWindow::AddParent(name, status, cputime, id, memory, ppid, k);
+            //then use another loop to free all those namelist entries
+//            for(int i = 0; i < counter; i++) {
+//                free(namelist[n - i]);
+//            }
 
         }
 
-        free(namelist);
+        //free(namelist);
 
     }
 }
 
-//void MainWindow::on_pushButton_2_clicked()
-//{
-//    ui->treeWidget->clear();
-//    ui->treeWidget->clear();
-//    struct dirent **namelist;
-//    int n;
-//    n = scandir("/proc", &namelist, filter, 0);
-//    if (n < 0)
-//        perror("Not enough memory.");
-//    else {
-
-//        while(n--){
-
-//            QString filename = "/proc/";
-//            filename += (namelist[n]->d_name);
-//            filename += ("/status");
-//            QFile file(filename);
-//            if(!file.open(QIODevice::ReadOnly))
-//                QMessageBox::information(0, "info", file.errorString());
-//            QTextStream in(&file);
-//            QString line = in.readLine();
-//            QString name;
-//            QString status;
-//            QString memSize;
-//            while(!line.isNull()) {
-//                if (line.contains("Name", Qt::CaseInsensitive)) {
-//                    name = line;
-//                }
-//                if (line.contains("State", Qt::CaseInsensitive)) {
-//                    status = line;
-//                }
-//                if (line.contains("VmSize", Qt::CaseInsensitive)) {
-//                    memSize = line;
-//                }
-//                line = in.readLine();
-//            }
-//            QString finalLine = name;
-//            finalLine += "            ";
-//            finalLine += status;
-//            double amrish = calculateCpuTime(namelist[n]->d_name);
-//            finalLine += "   CPU Time";
-//            finalLine += ( QString::number(amrish));
-//            finalLine += "   PID: ";
-//            finalLine += namelist[n]->d_name;
-//            finalLine += "   Memory Used: ";
-//            bool ok = false;
-//            //double mmm = memSize.toDouble(&ok) / 1024;
-//            //finalLine += ( QString::number(mmm));
-//            QStringList list = memSize.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-//            finalLine += ( QString::number(list.at(1).toDouble(&ok) / 1024));
-//            //finalLine += memSize;
-//            //ui->treeWidget->addItem(finalLine);
-//            free(namelist[n]);
-
-//        }
-
-//        free(namelist);
-
-//    }
-//}
 
 void MainWindow::on_pushButton_3_clicked()
 {
@@ -316,4 +288,5 @@ void MainWindow::on_pushButton_4_clicked()
     ui->treeWidget->clear();
     ui->listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+
 }

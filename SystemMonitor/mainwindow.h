@@ -25,11 +25,11 @@ private slots:
 
     void on_pushButton_4_clicked();
 
-    void AddParent (QString name, QString status, QString cpu, QString id, QString memory);
+    int AddParent (QString name, QString status, QString cpu, QString id, QString memory, QString ppid, int k);
 
     void AddChild (QTreeWidgetItem *parent, QString name, QString status, QString cpu, QString id, QString memory);
 
-    void right_click_menu (const QPoint &pos);
+    void on_treeWidget_customContextMenuRequested(const QPoint &pos);
 
 private:
     Ui::MainWindow *ui;
