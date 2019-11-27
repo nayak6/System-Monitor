@@ -15,8 +15,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
 
 struct dirent **listdir;
+QString selectedPid;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -167,39 +169,66 @@ void MainWindow::AddChild (QTreeWidgetItem *parent, QString name, QString status
     parent->addChild(item);
 }
 
+void MainWindow::killItem()
+{
+    //printf("I am here!");
+    QList<QTreeWidgetItem*> sel_items = ui->treeWidget->selectedItems();
+    for(int i=0; i<sel_items.size(); i++){
+        kill(selectedPid.toInt(), SIGKILL);
+        delete sel_items.at(i);
+    }
+}
+
+void MainWindow::stopItem()
+{
+    //printf("I am here!");
+    QList<QTreeWidgetItem*> sel_items = ui->treeWidget->selectedItems();
+    for(int i=0; i<sel_items.size(); i++){
+        kill(selectedPid.toInt(), SIGSTOP);
+        //delete sel_items.at(i);
+    }
+}
+
+void MainWindow::continueItem()
+{
+    //printf("I am here!");
+    QList<QTreeWidgetItem*> sel_items = ui->treeWidget->selectedItems();
+    for(int i=0; i<sel_items.size(); i++){
+        kill(selectedPid.toInt(), SIGCONT);
+        //delete sel_items.at(i);
+    }
+}
+
 //Menu box on right clicking a process
 void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
 {
     QTreeWidget *tree = ui->treeWidget;
     QTreeWidgetItem *item = tree->itemAt(pos);
-    qDebug() << pos << item->text(0);
+    selectedPid = item->text(3);
     QMenu menu(this);
 
     //NULL in place of SLOT(newDev())
     QAction *action1 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Stop Process"), this);
-    action1->setStatusTip(tr("new sth"));
-    connect(action1, SIGNAL(triggered()), this, SLOT(newDev()));
+    connect(action1, SIGNAL(triggered()), this, SLOT(stopItem()));
     menu.addAction(action1);
 
     QAction *action2 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Continue Process"), this);
-    action2->setStatusTip(tr("new sth"));
-    connect(action2, SIGNAL(triggered()), this, SLOT(newDev()));
+    connect(action2, SIGNAL(triggered()), this, SLOT(continueItem()));
     menu.addAction(action2);
 
     QAction *action3 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Kill Process"), this);
-    action3->setStatusTip(tr("new sth"));
-    connect(action3, SIGNAL(triggered()), this, SLOT(newDev()));
+    connect(action3, SIGNAL(triggered()), this, SLOT(killItem()));
     menu.addAction(action3);
 
-    QAction *action4 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Memory Maps"), this);
-    action4->setStatusTip(tr("new sth"));
-    connect(action4, SIGNAL(triggered()), this, SLOT(newDev()));
-    menu.addAction(action4);
+//    QAction *action4 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Memory Maps"), this);
+//    action4->setStatusTip(tr("new sth"));
+//    connect(action4, SIGNAL(triggered()), this, SLOT(newDev()));
+//    menu.addAction(action4);
 
-    QAction *action5 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Open Files"), this);
-    action5->setStatusTip(tr("new sth"));
-    connect(action5, SIGNAL(triggered()), this, SLOT(newDev()));
-    menu.addAction(action5);
+//    QAction *action5 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Open Files"), this);
+//    action5->setStatusTip(tr("new sth"));
+//    connect(action5, SIGNAL(triggered()), this, SLOT(newDev()));
+//    menu.addAction(action5);
 
     QPoint pt(pos);
     menu.exec(tree->mapToGlobal(pos));
@@ -276,7 +305,7 @@ void MainWindow::on_pushButton_2_clicked()
 
 void MainWindow::on_pushButton_3_clicked()
 {
-    ui->treeWidget->clear();
+    ui->listWidget->clear();
     ui->treeWidget->clear();
     ui->treeWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);

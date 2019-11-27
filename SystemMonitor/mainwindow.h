@@ -31,6 +31,12 @@ private slots:
 
     void on_treeWidget_customContextMenuRequested(const QPoint &pos);
 
+    void killItem();
+
+    void stopItem();
+
+    void continueItem();
+
 private:
     Ui::MainWindow *ui;
 };
