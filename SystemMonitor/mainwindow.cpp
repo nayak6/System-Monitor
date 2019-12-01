@@ -20,6 +20,9 @@
 struct dirent **listdir;
 QString selectedPid;
 QString selectedProcess;
+QString selectedState;
+QString selectedCPU;
+QString selectedMemory;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -203,7 +206,7 @@ void MainWindow::continueItem()
 
 void MainWindow::listProperties() {
     propertiesNewWindow = new MyProperties();
-    propertiesNewWindow->showProperties(selectedPid, selectedProcess);
+    propertiesNewWindow->showProperties(selectedPid, selectedProcess,selectedCPU,selectedMemory,selectedState);
     propertiesNewWindow->show();
 //    this->hide(); //this will disappear main window
 }
@@ -215,6 +218,10 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
     QTreeWidgetItem *item = tree->itemAt(pos);
     selectedPid = item->text(3);
     selectedProcess = item->text(0);
+    selectedState = item->text(1);
+    selectedCPU = item->text(2);
+    selectedMemory = item->text(4);
+
     QMenu menu(this);
 
     //NULL in place of SLOT(newDev())
