@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "memmapmainwindow.h"
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
@@ -199,6 +200,13 @@ void MainWindow::continueItem()
     }
 }
 
+void MainWindow::openMemMap()
+{
+    mapp = new MemMapMainWindow(this);
+    mapp->setPid(selectedPid);
+    mapp->show();
+}
+
 //Menu box on right clicking a process
 void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
 {
@@ -220,10 +228,9 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
     connect(action3, SIGNAL(triggered()), this, SLOT(killItem()));
     menu.addAction(action3);
 
-//    QAction *action4 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Memory Maps"), this);
-//    action4->setStatusTip(tr("new sth"));
-//    connect(action4, SIGNAL(triggered()), this, SLOT(newDev()));
-//    menu.addAction(action4);
+    QAction *action4 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Memory Maps"), this);
+    connect(action4, SIGNAL(triggered()), this, SLOT(openMemMap()));
+    menu.addAction(action4);
 
 //    QAction *action5 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Open Files"), this);
 //    action5->setStatusTip(tr("new sth"));

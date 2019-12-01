@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "memmapmainwindow.h"
 #include <QMainWindow>
 #include <QTreeWidget>
 
@@ -37,8 +38,11 @@ private slots:
 
     void continueItem();
 
+    void openMemMap();
+
 private:
     Ui::MainWindow *ui;
+    MemMapMainWindow *mapp;
 };
 
 #endif // MAINWINDOW_H
