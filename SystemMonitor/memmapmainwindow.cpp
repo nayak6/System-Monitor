@@ -22,36 +22,45 @@ MemMapMainWindow::~MemMapMainWindow()
 
 void MemMapMainWindow::setPid(QString myPid)
 {
+    qDebug() << myPid;
     globalPid = myPid;
-    QString filename = "/proc/";
-    filename += globalPid;
-    filename += ("/smaps");
-    QFile file(filename);
+    QString filenamee = "/proc/";
+    filenamee += globalPid;
+    filenamee += ("/smaps");
+    QFile file(filenamee);
     if(!file.open(QIODevice::ReadOnly))
         QMessageBox::information(0, "info", file.errorString());
     QTextStream in(&file);
     QString line = in.readLine();
     int count = 0;
+    QString filename;
+    QString vmstart;
+    QString vmend;
+    QString vmsize;
+    QString flags;
+    QString vmoffset;
+    QString pclean;
+    QString pdirty;
+    QString sclean;
+    QString sdirty;
     while(!line.isNull()) {
-        QString filename;
-        QString vmstart;
-        QString vmend;
-        QString vmsize;
-        QString flags;
-        QString vmoffset;
-        QString pclean;
-        QString pdirty;
-        QString sclean;
-        QString sdirty;
 
+        qDebug() << line;
         if (line.contains("-",  Qt::CaseInsensitive)) {
-            printf("%s our linne\n", line);
+            //printf("%s our linne\n", line);
             QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
             flags = list.at(1);
             vmoffset = list.at(2);
-            filename = list.at(5);
 
-            QStringList list2 = list.at(0).split(QRegExp("-"), QString::SkipEmptyParts);
+            if (list.count() >= 6) {
+                filename = list.at(5);
+            }
+            else {
+                filename = "";
+            }
+
+
+            QStringList list2 = list.at(0).split("-");
             vmstart = list2.at(0);
             vmend = list2.at(1);
             count++;
@@ -79,7 +88,13 @@ void MemMapMainWindow::setPid(QString myPid)
 
         if (count == 5) {
             QTreeWidgetItem *item = new QTreeWidgetItem();
-            item->setText(0, filename);
+            if (filename == "") {
+                item->setText(0, "------");
+            }
+            else {
+                item->setText(0, filename);
+            }
+
             item->setText(1, vmstart);
             item->setText(2, vmend);
             item->setText(3, vmsize);
