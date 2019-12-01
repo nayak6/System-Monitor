@@ -31,6 +31,12 @@ private slots:
 
     void on_treeWidget_customContextMenuRequested(const QPoint &pos);
 
+    void cpu_graph();
+
+    void memswap_graph();
+
+    void network_graph();
+
 private:
     Ui::MainWindow *ui;
 };

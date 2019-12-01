@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 struct dirent **listdir;
+int graph_decider = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -185,7 +186,6 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
     qDebug() << pos << item->text(0);
     QMenu menu(this);
 
-    //NULL in place of SLOT(newDev())
     QAction *action1 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Stop Process"), this);
     action1->setStatusTip(tr("new sth"));
     connect(action1, SIGNAL(triggered()), this, SLOT(newDev()));
@@ -288,15 +288,11 @@ void MainWindow::on_pushButton_2_clicked()
     }
 }
 
-
-void MainWindow::on_pushButton_3_clicked()
+void MainWindow::cpu_graph()
 {
-    ui->listWidget->clear();
-    ui->treeWidget->clear();
-
-    ui->customPlot->setVisible(true);
-    ui->listWidget->setVisible(false);
-    ui->treeWidget->setVisible(false);
+    ui->customPlot->rescaleAxes();
+    ui->customPlot->clearPlottables();
+    ui->customPlot->replot();
 
     // set locale to english, so we get english month names:
     ui->customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
@@ -308,9 +304,7 @@ void MainWindow::on_pushButton_3_clicked()
     {
       ui->customPlot->addGraph();
       QColor color(20+200/4.0*gi,70*(1.6-gi/4.0), 150, 150);
-      ui->customPlot->graph()->setLineStyle(QCPGraph::lsLine);
-      ui->customPlot->graph()->setPen(QPen(color.lighter(200)));
-      ui->customPlot->graph()->setBrush(QBrush(color));
+      ui->customPlot->graph()->setPen(QPen(color));
       // generate random walk data:
       QVector<QCPGraphData> timeData(250);
       for (int i=0; i<250; ++i)
@@ -323,21 +317,34 @@ void MainWindow::on_pushButton_3_clicked()
       }
       ui->customPlot->graph()->data()->set(timeData);
     }
+
     // configure bottom axis to show date instead of number:
-    QSharedPointer<QCPAxisTickerDateTime> dateTicker(new QCPAxisTickerDateTime);
-    dateTicker->setDateTimeFormat("d. MMMM\nyyyy");
-    ui->customPlot->xAxis->setTicker(dateTicker);
+    QSharedPointer<QCPAxisTickerText> ticker(new QCPAxisTickerText);
+    ticker->addTick(0, "60");
+    ticker->addTick(25, "45");
+    ticker->addTick(50, "30");
+    ticker->addTick(75, "15");
+    ticker->addTick(100, "0");
+    ui->customPlot->xAxis->setTicker(ticker);
+
     // configure left axis text labels:
     QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
-    textTicker->addTick(10, "a bit\nlow");
-    textTicker->addTick(50, "quite\nhigh");
+    textTicker->addTick(0, "0%");
+    textTicker->addTick(20, "20%");
+    textTicker->addTick(40, "40%");
+    textTicker->addTick(60, "60%");
+    textTicker->addTick(80, "80%");
+    textTicker->addTick(100, "100%");
     ui->customPlot->yAxis->setTicker(textTicker);
+
     // set a more compact font size for bottom and left axis tick labels:
     ui->customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
     ui->customPlot->yAxis->setTickLabelFont(QFont(QFont().family(), 8));
+
     // set axis labels:
-    ui->customPlot->xAxis->setLabel("Date");
-    ui->customPlot->yAxis->setLabel("Random wobbly lines value");
+    ui->customPlot->xAxis->setLabel("TIME\n\nCPU HISTORY");
+    ui->customPlot->yAxis->setLabel("CPU USAGE");
+
     // make top and right axes visible but without ticks and labels:
     ui->customPlot->xAxis2->setVisible(true);
     ui->customPlot->yAxis2->setVisible(true);
@@ -347,11 +354,184 @@ void MainWindow::on_pushButton_3_clicked()
     ui->customPlot->yAxis2->setTickLabels(false);
     // set axis ranges to show all data:
     ui->customPlot->xAxis->setRange(now, now+24*3600*249);
-    ui->customPlot->yAxis->setRange(0, 60);
+    ui->customPlot->yAxis->setRange(0, 100);
     // show legend with slightly transparent background brush:
     ui->customPlot->legend->setVisible(true);
     ui->customPlot->legend->setBrush(QColor(255, 255, 255, 150));
     ui->customPlot->replot();
+}
+
+void MainWindow::memswap_graph()
+{
+    ui->customPlot->rescaleAxes();
+    ui->customPlot->clearPlottables();
+    ui->customPlot->replot();
+
+    // set locale to english, so we get english month names:
+    ui->customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
+    // seconds of current time, we'll use it as starting point in time for data:
+    double now = QDateTime::currentDateTime().toTime_t();
+    srand(8); // set the random seed, so we always get the same random data
+    // create multiple graphs:
+    for (int gi=0; gi<5; ++gi)
+    {
+      ui->customPlot->addGraph();
+      QColor color(20+200/4.0*gi,70*(1.6-gi/4.0), 150, 150);
+      ui->customPlot->graph()->setPen(QPen(color));
+      // generate random walk data:
+      QVector<QCPGraphData> timeData(250);
+      for (int i=0; i<250; ++i)
+      {
+        timeData[i].key = now + 24*3600*i;
+        if (i == 0)
+          timeData[i].value = (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
+        else
+          timeData[i].value = qFabs(timeData[i-1].value)*(1+0.02/4.0*(4-gi)) + (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
+      }
+      ui->customPlot->graph()->data()->set(timeData);
+    }
+
+    // configure bottom axis to show date instead of number:
+    QSharedPointer<QCPAxisTickerText> ticker(new QCPAxisTickerText);
+    ticker->addTick(0, "60");
+    ticker->addTick(25, "45");
+    ticker->addTick(50, "30");
+    ticker->addTick(75, "15");
+    ticker->addTick(100, "0");
+    ui->customPlot->xAxis->setTicker(ticker);
+
+    // configure left axis text labels:
+    QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
+    textTicker->addTick(0, "0%");
+    textTicker->addTick(20, "20%");
+    textTicker->addTick(40, "40%");
+    textTicker->addTick(60, "60%");
+    textTicker->addTick(80, "80%");
+    textTicker->addTick(100, "100%");
+    ui->customPlot->yAxis->setTicker(textTicker);
+
+    // set a more compact font size for bottom and left axis tick labels:
+    ui->customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
+    ui->customPlot->yAxis->setTickLabelFont(QFont(QFont().family(), 8));
+
+    // set axis labels:
+    ui->customPlot->xAxis->setLabel("TIME\n\nMEMORY AND SWAP HISTORY");
+    ui->customPlot->yAxis->setLabel("MEMORY AND SWAP % USAGE");
+
+    // make top and right axes visible but without ticks and labels:
+    ui->customPlot->xAxis2->setVisible(true);
+    ui->customPlot->yAxis2->setVisible(true);
+    ui->customPlot->xAxis2->setTicks(false);
+    ui->customPlot->yAxis2->setTicks(false);
+    ui->customPlot->xAxis2->setTickLabels(false);
+    ui->customPlot->yAxis2->setTickLabels(false);
+
+    // set axis ranges to show all data:
+    ui->customPlot->xAxis->setRange(now, now+24*3600*249);
+    ui->customPlot->yAxis->setRange(0, 100);
+
+    // show legend with slightly transparent background brush:
+    ui->customPlot->legend->setVisible(true);
+    ui->customPlot->legend->setBrush(QColor(255, 255, 255, 150));
+    ui->customPlot->replot();
+}
+
+void MainWindow::network_graph()
+{
+    ui->customPlot->rescaleAxes();
+    ui->customPlot->clearPlottables();
+    ui->customPlot->replot();
+
+    // set locale to english, so we get english month names:
+    ui->customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
+    // seconds of current time, we'll use it as starting point in time for data:
+    double now = QDateTime::currentDateTime().toTime_t();
+    srand(8); // set the random seed, so we always get the same random data
+    // create multiple graphs:
+    for (int gi=0; gi<5; ++gi)
+    {
+      ui->customPlot->addGraph();
+      QColor color(20+200/4.0*gi,70*(1.6-gi/4.0), 150, 150);
+      ui->customPlot->graph()->setPen(QPen(color));
+      // generate random walk data:
+      QVector<QCPGraphData> timeData(250);
+      for (int i=0; i<250; ++i)
+      {
+        timeData[i].key = now + 24*3600*i;
+        if (i == 0)
+          timeData[i].value = (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
+        else
+          timeData[i].value = qFabs(timeData[i-1].value)*(1+0.02/4.0*(4-gi)) + (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
+      }
+      ui->customPlot->graph()->data()->set(timeData);
+    }
+
+    // configure bottom axis to show date instead of number:
+    QSharedPointer<QCPAxisTickerText> ticker(new QCPAxisTickerText);
+    ticker->addTick(0, "60");
+    ticker->addTick(25, "45");
+    ticker->addTick(50, "30");
+    ticker->addTick(75, "15");
+    ticker->addTick(100, "0");
+    ui->customPlot->xAxis->setTicker(ticker);
+
+    // configure left axis text labels:
+    QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
+    textTicker->addTick(0, "0%");
+    textTicker->addTick(20, "20%");
+    textTicker->addTick(40, "40%");
+    textTicker->addTick(60, "60%");
+    textTicker->addTick(80, "80%");
+    textTicker->addTick(100, "100%");
+    ui->customPlot->yAxis->setTicker(textTicker);
+
+    // set a more compact font size for bottom and left axis tick labels:
+    ui->customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
+    ui->customPlot->yAxis->setTickLabelFont(QFont(QFont().family(), 8));
+
+    // set axis labels:
+    ui->customPlot->xAxis->setLabel("TIME\n\nNETWORK HISTORY");
+    ui->customPlot->yAxis->setLabel("NETWORK % USAGE");
+
+    // make top and right axes visible but without ticks and labels:
+    ui->customPlot->xAxis2->setVisible(true);
+    ui->customPlot->yAxis2->setVisible(true);
+    ui->customPlot->xAxis2->setTicks(false);
+    ui->customPlot->yAxis2->setTicks(false);
+    ui->customPlot->xAxis2->setTickLabels(false);
+    ui->customPlot->yAxis2->setTickLabels(false);
+
+    // set axis ranges to show all data:
+    ui->customPlot->xAxis->setRange(now, now+24*3600*249);
+    ui->customPlot->yAxis->setRange(0, 100);
+
+    // show legend with slightly transparent background brush:
+    ui->customPlot->legend->setVisible(true);
+    ui->customPlot->legend->setBrush(QColor(255, 255, 255, 150));
+    ui->customPlot->replot();
+}
+
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    ui->listWidget->clear();
+    ui->treeWidget->clear();
+
+    ui->customPlot->setVisible(true);
+    ui->listWidget->setVisible(false);
+    ui->treeWidget->setVisible(false);
+
+    graph_decider++;
+    if(graph_decider % 3 == 1) {
+        cpu_graph();
+    }
+    else if(graph_decider % 3 == 2) {
+        memswap_graph();
+    }
+    else {
+        network_graph();
+    }
+
 
 }
 
