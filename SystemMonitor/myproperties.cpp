@@ -126,15 +126,15 @@ void MyProperties::showProperties(QString processID, QString processName, QStrin
 
     QString status = "Status                    " + currentState;
     ui->listWidget->addItem(status);
-    QString memory = "Memory                    " + QString::number( memoryMIB.toDouble()/7);
+    QString memory = "Memory                    " + QString::number( memoryMIB.toDouble()/7) + " MiB";
     ui->listWidget->addItem(memory);
-    QString virtualMemory = "Virtual Memory         " + memoryMIB;
+    QString virtualMemory = "Virtual Memory         " + memoryMIB + " MiB";
     ui->listWidget->addItem(virtualMemory);
-    QString residentMemory = "Resident Memory        " + QString::number( residentMem);
+    QString residentMemory = "Resident Memory        " + QString::number( residentMem) + " MiB";
     ui->listWidget->addItem(residentMemory);
     QString writableMemory = "Writable Memory        N/A";
     ui->listWidget->addItem(writableMemory);
-    QString sharedMemory = "Shared Memory        " + QString::number( sharedMem);
+    QString sharedMemory = "Shared Memory        " + QString::number( sharedMem) + " MiB";
     ui->listWidget->addItem(sharedMemory);
     QString serverMemory = "X Server Memory        N/A";
     ui->listWidget->addItem(serverMemory);
