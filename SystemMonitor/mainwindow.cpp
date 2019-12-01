@@ -19,6 +19,7 @@
 
 struct dirent **listdir;
 QString selectedPid;
+QString selectedProcess;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -58,6 +59,7 @@ void MainWindow::on_pushButton_clicked()
             break;
         }
     }
+    
     struct utsname unameData;
     uname(&unameData);
     QString releaseName = "Kernel Release: ";
@@ -199,12 +201,20 @@ void MainWindow::continueItem()
     }
 }
 
+void MainWindow::listProperties() {
+    propertiesNewWindow = new MyProperties();
+    propertiesNewWindow->showProperties(selectedPid, selectedProcess);
+    propertiesNewWindow->show();
+//    this->hide(); //this will disappear main window
+}
+
 //Menu box on right clicking a process
 void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
 {
     QTreeWidget *tree = ui->treeWidget;
     QTreeWidgetItem *item = tree->itemAt(pos);
     selectedPid = item->text(3);
+    selectedProcess = item->text(0);
     QMenu menu(this);
 
     //NULL in place of SLOT(newDev())
@@ -229,6 +239,10 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
 //    action5->setStatusTip(tr("new sth"));
 //    connect(action5, SIGNAL(triggered()), this, SLOT(newDev()));
 //    menu.addAction(action5);
+
+    QAction *action6 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Properties"), this);
+    connect(action6, SIGNAL(triggered()), this, SLOT(listProperties()));
+    menu.addAction(action6);
 
     QPoint pt(pos);
     menu.exec(tree->mapToGlobal(pos));
@@ -279,6 +293,7 @@ void MainWindow::on_pushButton_2_clicked()
                     line = list.at(1);
                     ppid = line;
                 }
+                
                 line = in.readLine();
             }
             double cpu = calculateCpuTime(namelist[n]->d_name);
@@ -303,19 +318,16 @@ void MainWindow::on_pushButton_2_clicked()
 }
 
 
-void MainWindow::on_pushButton_3_clicked()
-{
+void MainWindow::on_pushButton_3_clicked() {
     ui->listWidget->clear();
     ui->treeWidget->clear();
     ui->treeWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 }
 
-void MainWindow::on_pushButton_4_clicked()
-{
+void MainWindow::on_pushButton_4_clicked() {
     ui->listWidget->clear();
     ui->treeWidget->clear();
     ui->listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-
 }

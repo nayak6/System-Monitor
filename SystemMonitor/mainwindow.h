@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "myproperties.h"
+
 #include <QMainWindow>
 #include <QTreeWidget>
 
@@ -37,8 +39,12 @@ private slots:
 
     void continueItem();
 
+    void listProperties();
+
 private:
     Ui::MainWindow *ui;
+private:
+    MyProperties *propertiesNewWindow;
 };
 
 #endif // MAINWINDOW_H

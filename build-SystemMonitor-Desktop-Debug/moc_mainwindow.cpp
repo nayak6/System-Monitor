@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_MainWindow_t {
-    QByteArrayData data[19];
-    char stringdata0[227];
+    QByteArrayData data[23];
+    char stringdata0[273];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -49,7 +49,11 @@ QT_MOC_LITERAL(14, 149, 8), // "AddChild"
 QT_MOC_LITERAL(15, 158, 16), // "QTreeWidgetItem*"
 QT_MOC_LITERAL(16, 175, 6), // "parent"
 QT_MOC_LITERAL(17, 182, 40), // "on_treeWidget_customContextMe..."
-QT_MOC_LITERAL(18, 223, 3) // "pos"
+QT_MOC_LITERAL(18, 223, 3), // "pos"
+QT_MOC_LITERAL(19, 227, 8), // "killItem"
+QT_MOC_LITERAL(20, 236, 8), // "stopItem"
+QT_MOC_LITERAL(21, 245, 12), // "continueItem"
+QT_MOC_LITERAL(22, 258, 14) // "listProperties"
 
     },
     "MainWindow\0on_pushButton_clicked\0\0"
@@ -58,7 +62,8 @@ QT_MOC_LITERAL(18, 223, 3) // "pos"
     "name\0status\0cpu\0id\0memory\0ppid\0k\0"
     "AddChild\0QTreeWidgetItem*\0parent\0"
     "on_treeWidget_customContextMenuRequested\0"
-    "pos"
+    "pos\0killItem\0stopItem\0continueItem\0"
+    "listProperties"
 };
 #undef QT_MOC_LITERAL
 
@@ -68,7 +73,7 @@ static const uint qt_meta_data_MainWindow[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-       7,   14, // methods
+      11,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -76,13 +81,17 @@ static const uint qt_meta_data_MainWindow[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    0,   49,    2, 0x08 /* Private */,
-       3,    0,   50,    2, 0x08 /* Private */,
-       4,    0,   51,    2, 0x08 /* Private */,
-       5,    0,   52,    2, 0x08 /* Private */,
-       6,    7,   53,    2, 0x08 /* Private */,
-      14,    6,   68,    2, 0x08 /* Private */,
-      17,    1,   81,    2, 0x08 /* Private */,
+       1,    0,   69,    2, 0x08 /* Private */,
+       3,    0,   70,    2, 0x08 /* Private */,
+       4,    0,   71,    2, 0x08 /* Private */,
+       5,    0,   72,    2, 0x08 /* Private */,
+       6,    7,   73,    2, 0x08 /* Private */,
+      14,    6,   88,    2, 0x08 /* Private */,
+      17,    1,  101,    2, 0x08 /* Private */,
+      19,    0,  104,    2, 0x08 /* Private */,
+      20,    0,  105,    2, 0x08 /* Private */,
+      21,    0,  106,    2, 0x08 /* Private */,
+      22,    0,  107,    2, 0x08 /* Private */,
 
  // slots: parameters
     QMetaType::Void,
@@ -92,6 +101,10 @@ static const uint qt_meta_data_MainWindow[] = {
     QMetaType::Int, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::Int,    7,    8,    9,   10,   11,   12,   13,
     QMetaType::Void, 0x80000000 | 15, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString,   16,    7,    8,    9,   10,   11,
     QMetaType::Void, QMetaType::QPoint,   18,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
 
        0        // eod
 };
@@ -110,6 +123,10 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
             if (_a[0]) *reinterpret_cast< int*>(_a[0]) = std::move(_r); }  break;
         case 5: _t->AddChild((*reinterpret_cast< QTreeWidgetItem*(*)>(_a[1])),(*reinterpret_cast< QString(*)>(_a[2])),(*reinterpret_cast< QString(*)>(_a[3])),(*reinterpret_cast< QString(*)>(_a[4])),(*reinterpret_cast< QString(*)>(_a[5])),(*reinterpret_cast< QString(*)>(_a[6]))); break;
         case 6: _t->on_treeWidget_customContextMenuRequested((*reinterpret_cast< const QPoint(*)>(_a[1]))); break;
+        case 7: _t->killItem(); break;
+        case 8: _t->stopItem(); break;
+        case 9: _t->continueItem(); break;
+        case 10: _t->listProperties(); break;
         default: ;
         }
     }
@@ -140,13 +157,13 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 7)
+        if (_id < 11)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 7;
+        _id -= 11;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 7)
+        if (_id < 11)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 7;
+        _id -= 11;
     }
     return _id;
 }
