@@ -40,6 +40,12 @@ private slots:
 
     void openMemMap();
 
+    void on_actionAll_Processes_triggered();
+
+    void allProcess();
+
+    void on_actionUser_Processes_triggered();
+
 private:
     Ui::MainWindow *ui;
     MemMapMainWindow *mapp;

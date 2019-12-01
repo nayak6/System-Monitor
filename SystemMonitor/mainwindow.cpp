@@ -326,3 +326,83 @@ void MainWindow::on_pushButton_4_clicked()
     ui->listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
 }
+
+void MainWindow::on_actionAll_Processes_triggered()
+{
+    allProcess();
+}
+
+int filter2(const struct dirent *dir)
+{
+    return !fnmatch("[1-9]*", dir->d_name, 0);
+}
+
+void MainWindow::allProcess() {
+    ui->treeWidget->clear();
+    ui->listWidget->clear();
+    struct dirent **namelist;
+    int n;
+    n = scandir("/proc", &namelist, filter2, 0);
+    if (n < 0)
+        perror("Not enough memory.");
+    else {
+        int k = n;
+        while(n--){
+
+            QString filename = "/proc/";
+            filename += (namelist[n]->d_name);
+            filename += ("/status");
+            QFile file(filename);
+            if(!file.open(QIODevice::ReadOnly))
+                QMessageBox::information(0, "info", file.errorString());
+            QTextStream in(&file);
+            QString line = in.readLine();
+            QString ppid;
+            QString name;
+            QString status;
+            QString memSize;
+            qDebug() << filename;
+            qDebug() << "-----------------";
+            while(!line.isNull()) {
+                if (line.contains("Name", Qt::CaseInsensitive)) {
+                    QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                    line = list.at(1);
+                    name = line;
+                }
+                if (line.contains("State", Qt::CaseInsensitive)) {
+                    QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                    line = list.at(2);
+                    status = line;
+                }
+                if (line.contains("VmSize", Qt::CaseInsensitive)) {
+                    memSize = line;
+                }
+
+                if(line.contains("PPid", Qt::CaseInsensitive)) {
+                    QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                    line = list.at(1);
+                    ppid = line;
+                }
+                line = in.readLine();
+            }
+            double cpu = calculateCpuTime(namelist[n]->d_name);
+            QString cputime = QString::number(cpu);
+            QString id = namelist[n]->d_name;
+            bool ok = false;
+            if (memSize == "") {
+                MainWindow::AddParent(name, status, cputime, id, "0", ppid, k);
+            }
+            else {
+                QStringList list = memSize.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                QString memory = ( QString::number(list.at(1).toDouble(&ok) / 1024));
+
+                int counter = MainWindow::AddParent(name, status, cputime, id, memory, ppid, k);
+            }
+        }
+    }
+}
+
+void MainWindow::on_actionUser_Processes_triggered()
+{
+    on_pushButton_2_clicked();
+}
