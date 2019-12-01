@@ -24,6 +24,7 @@
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QWidget>
+#include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -34,12 +35,13 @@ public:
     QAction *actionmy_info;
     QWidget *centralWidget;
     QGridLayout *gridLayout;
-    QListWidget *listWidget;
+    QCustomPlot *customPlot;
     QPushButton *pushButton;
     QPushButton *pushButton_4;
     QPushButton *pushButton_3;
     QPushButton *pushButton_2;
     QTreeWidget *treeWidget;
+    QListWidget *listWidget;
     QMenuBar *menuBar;
     QMenu *menupush;
     QMenu *menuEdit;
@@ -52,7 +54,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(479, 323);
+        MainWindow->resize(519, 330);
         actionbutton = new QAction(MainWindow);
         actionbutton->setObjectName(QStringLiteral("actionbutton"));
         actionmy_info = new QAction(MainWindow);
@@ -63,10 +65,12 @@ public:
         gridLayout->setSpacing(6);
         gridLayout->setContentsMargins(11, 11, 11, 11);
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
-        listWidget = new QListWidget(centralWidget);
-        listWidget->setObjectName(QStringLiteral("listWidget"));
+        customPlot = new QCustomPlot(centralWidget);
+        customPlot->setObjectName(QStringLiteral("customPlot"));
+        customPlot->setMinimumSize(QSize(0, 200));
+        customPlot->setMaximumSize(QSize(16777215, 16777215));
 
-        gridLayout->addWidget(listWidget, 2, 0, 1, 4);
+        gridLayout->addWidget(customPlot, 1, 0, 1, 4);
 
         pushButton = new QPushButton(centralWidget);
         pushButton->setObjectName(QStringLiteral("pushButton"));
@@ -105,12 +109,17 @@ public:
         treeWidget->setHeaderItem(__qtreewidgetitem);
         treeWidget->setObjectName(QStringLiteral("treeWidget"));
 
-        gridLayout->addWidget(treeWidget, 1, 0, 1, 4);
+        gridLayout->addWidget(treeWidget, 3, 0, 1, 4);
+
+        listWidget = new QListWidget(centralWidget);
+        listWidget->setObjectName(QStringLiteral("listWidget"));
+
+        gridLayout->addWidget(listWidget, 2, 0, 1, 4);
 
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 479, 20));
+        menuBar->setGeometry(QRect(0, 0, 519, 20));
         menupush = new QMenu(menuBar);
         menupush->setObjectName(QStringLiteral("menupush"));
         menuEdit = new QMenu(menuBar);
