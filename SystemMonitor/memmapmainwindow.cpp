@@ -85,8 +85,13 @@ void MemMapMainWindow::setPid(QString myPid)
             pdirty = list.at(1);
             count++;
         }
+        else if (line.contains("Size", Qt::CaseInsensitive)) {
+            QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+            vmsize = list.at(1);
+            count++;
+        }
 
-        if (count == 5) {
+        if (count == 6) {
             QTreeWidgetItem *item = new QTreeWidgetItem();
             if (filename == "") {
                 item->setText(0, "------");

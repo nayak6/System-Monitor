@@ -202,6 +202,28 @@ void MainWindow::continueItem()
     }
 }
 
+bool isUserProcess(char *thePid) {
+    uid_t user;
+    struct stat dirinfo;
+    int len = strlen(thePid) + 7;
+    char path[len];
+
+    strcpy(path, "/proc/");
+    strcat(path, thePid);
+    user = getuid();
+    if (stat(path, &dirinfo) < 0) {
+        perror("processdir() ==> stat()");
+        exit(EXIT_FAILURE);
+    }
+
+    if (user == dirinfo.st_uid) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 void MainWindow::listProperties() {
     propertiesNewWindow = new MyProperties();
     propertiesNewWindow->showProperties(selectedPid, selectedProcess,selectedCPU,selectedMemory,selectedState);
@@ -211,9 +233,18 @@ void MainWindow::listProperties() {
 
 void MainWindow::openMemMap()
 {
-    mapp = new MemMapMainWindow(this);
-    mapp->setPid(selectedPid);
-    mapp->show();
+    QByteArray ba = selectedPid.toLocal8Bit();
+    char *fs = ba.data();
+    if (isUserProcess(fs)) {
+        mapp = new MemMapMainWindow(this);
+        mapp->setPid(selectedPid);
+        mapp->show();
+    }
+    else {
+        QMessageBox mBox;
+        mBox.critical(0, "ERROR", "Not an user process!");
+        mBox.setFixedSize(500,200);
+    }
 }
 
 //Menu box on right clicking a process
