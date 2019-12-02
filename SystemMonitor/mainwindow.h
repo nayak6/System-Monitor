@@ -37,6 +37,8 @@ private slots:
 
     void network_graph();
 
+    void realtimeDataSlot();
+
 private:
     Ui::MainWindow *ui;
 };

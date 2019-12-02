@@ -18,6 +18,12 @@
 
 struct dirent **listdir;
 int graph_decider = 0;
+QTimer *dataTimer = new QTimer();
+int process_count = 0;
+int graph_choice = 1;
+double *cpu_usage;
+double swap_usage;
+double memory_usage;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -56,6 +62,7 @@ void MainWindow::on_pushButton_clicked()
         QMessageBox::information(0, "info", file.errorString());
     QTextStream in(&file);
     QString line = in.readLine();
+
     while(!line.isNull()) {
         line = in.readLine();
         if (line.contains("model name", Qt::CaseInsensitive)) {
@@ -91,8 +98,6 @@ void MainWindow::on_pushButton_clicked()
         diskStorage.append(QString::number((stat.f_blocks * stat.f_frsize) / (1024 * 1024 * 1024)));
         ui->listWidget->addItem(diskStorage);
     }
-
-
 }
 
 int filter(const struct dirent *dir)
@@ -105,6 +110,7 @@ int filter(const struct dirent *dir)
     strcpy(path, "/proc/");
     strcat(path, dir->d_name);
     user = getuid();
+
     if (stat(path, &dirinfo) < 0) {
         perror("processdir() ==> stat()");
         exit(EXIT_FAILURE);
@@ -140,7 +146,6 @@ double calculateCpuTime(QString pidd) {
     return cpu_time;
 }
 
-//my implementation
 
 //parent processes in a treewidget
 int MainWindow::AddParent(QString name, QString status, QString cpu, QString id, QString memory, QString ppid, int k)
@@ -154,15 +159,6 @@ int MainWindow::AddParent(QString name, QString status, QString cpu, QString id,
     item->setText(4, memory);
     item->setText(5, ppid);
     ui->treeWidget->addTopLevelItem(item);
-    //make a loop here and implement a counter for all the processes
-    //while subprocesses are there, addChild and increment count by 1.
-    //MainWindow::AddChild(item, name, status, cpu, id, memory);
-    //return the counter.
-
-//    int counter = k;
-//    while(counter--) {
-//        if(listname[counter]->d_name)
-//    }
     return count;
 }
 
@@ -232,7 +228,6 @@ void MainWindow::on_pushButton_2_clicked()
     else {
         int k = n;
         while(n--){
-
             QString filename = "/proc/";
             filename += (namelist[n]->d_name);
             filename += ("/status");
@@ -276,15 +271,59 @@ void MainWindow::on_pushButton_2_clicked()
 
             //returns i number of subprocesses that we can subtract from the n count loop
             int counter = MainWindow::AddParent(name, status, cputime, id, memory, ppid, k);
-            //then use another loop to free all those namelist entries
-//            for(int i = 0; i < counter; i++) {
-//                free(namelist[n - i]);
-//            }
+        }
+    }
+}
 
+void MainWindow::realtimeDataSlot()
+{
+    static QTime time(QTime::currentTime());
+    // calculate two new data points:
+    double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
+    static double lastPointKey = 0;
+    if (key-lastPointKey > 0.002) // at most add point every 2 ms
+    {
+        if (graph_choice == 1) {
+            for(int i =0; i < process_count; i++) {
+                ui->customPlot->graph(i)->addData(key, cpu_usage[i]);
+            }
         }
 
-        //free(namelist);
+        else if (graph_choice == 2) {
+            //mem and swap
+            ui->customPlot->graph(0)->addData(key, memory_usage);
+            ui->customPlot->graph(1)->addData(key, swap_usage);
+//            ui->statusBar->showMessage(
+//                  QString("Memory\n%1 % used")
+//                  .arg(memory_usage, 0, '%.2f', 0), 0);
 
+//            ui->statusBar->showMessage(
+//                  QString("Swap\n%1 % used")
+//                  .arg(swap_usage, 0, 'f', 0), 0);
+        }
+
+        else {
+            //network
+        }
+      lastPointKey = key;
+    }
+    // make key axis range scroll with the data (at a constant range size of 8):
+    ui->customPlot->xAxis->setRange(key, 8, Qt::AlignRight);
+    ui->customPlot->replot();
+
+    // calculate frames per second:
+    static double lastFpsKey;
+    static int frameCount;
+    ++frameCount;
+    if (key-lastFpsKey > 2) // average fps over 2 seconds
+    {
+      ui->statusBar->showMessage(
+            QString("%1 FPS, Total Data points: %2")
+            .arg(frameCount/(key-lastFpsKey), 0, 'f', 0)
+            .arg(ui->customPlot->graph(0)->data()->size()+ui->customPlot->graph(1)->data()->size())
+            , 0);
+      lastFpsKey = key;
+      frameCount = 0;
     }
 }
 
@@ -294,48 +333,42 @@ void MainWindow::cpu_graph()
     ui->customPlot->clearPlottables();
     ui->customPlot->replot();
 
-    // set locale to english, so we get english month names:
-    ui->customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
-    // seconds of current time, we'll use it as starting point in time for data:
-    double now = QDateTime::currentDateTime().toTime_t();
-    srand(8); // set the random seed, so we always get the same random data
-    // create multiple graphs:
-    for (int gi=0; gi<5; ++gi)
-    {
-      ui->customPlot->addGraph();
-      QColor color(20+200/4.0*gi,70*(1.6-gi/4.0), 150, 150);
-      ui->customPlot->graph()->setPen(QPen(color));
-      // generate random walk data:
-      QVector<QCPGraphData> timeData(250);
-      for (int i=0; i<250; ++i)
-      {
-        timeData[i].key = now + 24*3600*i;
-        if (i == 0)
-          timeData[i].value = (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-        else
-          timeData[i].value = qFabs(timeData[i-1].value)*(1+0.02/4.0*(4-gi)) + (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-      }
-      ui->customPlot->graph()->data()->set(timeData);
+    graph_choice = 1;
+    dataTimer->stop();
+    process_count = 0;
+
+    struct dirent **list;
+    int n;
+    n = scandir("/proc", &list, filter, 0);
+    if (n < 0)
+        perror("Not enough memory.");
+    else {
+        cpu_usage = new double[n];
+        int k = n;
+        while(n--){
+            cpu_usage[process_count] = calculateCpuTime(list[n]->d_name);
+            ui->customPlot->addGraph();
+            ui->customPlot->graph(process_count)->setPen(QPen(QColor(n, 2*n, 2*n)));
+            process_count++;
+        }
     }
 
-    // configure bottom axis to show date instead of number:
-    QSharedPointer<QCPAxisTickerText> ticker(new QCPAxisTickerText);
-    ticker->addTick(0, "60");
-    ticker->addTick(25, "45");
-    ticker->addTick(50, "30");
-    ticker->addTick(75, "15");
-    ticker->addTick(100, "0");
-    ui->customPlot->xAxis->setTicker(ticker);
+    QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
+    timeTicker->setTimeFormat("%h:%m:%s");
+    ui->customPlot->xAxis->setTicker(timeTicker);
 
-    // configure left axis text labels:
-    QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
-    textTicker->addTick(0, "0%");
-    textTicker->addTick(20, "20%");
-    textTicker->addTick(40, "40%");
-    textTicker->addTick(60, "60%");
-    textTicker->addTick(80, "80%");
-    textTicker->addTick(100, "100%");
-    ui->customPlot->yAxis->setTicker(textTicker);
+    ui->customPlot->axisRect()->setupFullAxesBox();
+    ui->customPlot->yAxis->setRange(0, 0.0000005);
+
+    // make left and bottom axes transfer their ranges to right and toQTimer *dataTimer = new QTimer();p axes:
+    connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
+
+    // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
+    connect(dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
+    dataTimer->start(0); // Interval 0 means to refresh as fast as possible
+    ui->customPlot->replot();
+
 
     // set a more compact font size for bottom and left axis tick labels:
     ui->customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
@@ -352,9 +385,7 @@ void MainWindow::cpu_graph()
     ui->customPlot->yAxis2->setTicks(false);
     ui->customPlot->xAxis2->setTickLabels(false);
     ui->customPlot->yAxis2->setTickLabels(false);
-    // set axis ranges to show all data:
-    ui->customPlot->xAxis->setRange(now, now+24*3600*249);
-    ui->customPlot->yAxis->setRange(0, 100);
+
     // show legend with slightly transparent background brush:
     ui->customPlot->legend->setVisible(true);
     ui->customPlot->legend->setBrush(QColor(255, 255, 255, 150));
@@ -366,49 +397,66 @@ void MainWindow::memswap_graph()
     ui->customPlot->rescaleAxes();
     ui->customPlot->clearPlottables();
     ui->customPlot->replot();
+    graph_choice = 2;
+    dataTimer->stop();
 
-    // set locale to english, so we get english month names:
-    ui->customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
-    // seconds of current time, we'll use it as starting point in time for data:
-    double now = QDateTime::currentDateTime().toTime_t();
-    srand(8); // set the random seed, so we always get the same random data
-    // create multiple graphs:
-    for (int gi=0; gi<5; ++gi)
-    {
-      ui->customPlot->addGraph();
-      QColor color(20+200/4.0*gi,70*(1.6-gi/4.0), 150, 150);
-      ui->customPlot->graph()->setPen(QPen(color));
-      // generate random walk data:
-      QVector<QCPGraphData> timeData(250);
-      for (int i=0; i<250; ++i)
-      {
-        timeData[i].key = now + 24*3600*i;
-        if (i == 0)
-          timeData[i].value = (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-        else
-          timeData[i].value = qFabs(timeData[i-1].value)*(1+0.02/4.0*(4-gi)) + (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-      }
-      ui->customPlot->graph()->data()->set(timeData);
+    QString filename = "/proc/meminfo";
+    QFile file(filename);
+    if(!file.open(QIODevice::ReadOnly))
+        QMessageBox::information(0, "info", file.errorString());
+    QTextStream in(&file);
+    QString line = in.readLine();
+    QString memory_available;
+    QString memory_total;
+    QString swap_memory_cache;
+    QString swap_memory_total;
+    while(!line.isNull()) {
+        if (line.contains("MemAvailable", Qt::CaseInsensitive)) {
+            QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+            memory_available = list.at(1);
+
+        }
+        if (line.contains("MemTotal", Qt::CaseInsensitive)) {
+            QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+            memory_total = list.at(1);
+        }
+        if (line.contains("SwapCached", Qt::CaseInsensitive)) {
+            QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+            swap_memory_cache = list.at(1);
+        }
+        if (line.contains("SwapTotal", Qt::CaseInsensitive)) {
+            QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+            swap_memory_total = list.at(1);
+        }
+        line = in.readLine();
     }
 
-    // configure bottom axis to show date instead of number:
-    QSharedPointer<QCPAxisTickerText> ticker(new QCPAxisTickerText);
-    ticker->addTick(0, "60");
-    ticker->addTick(25, "45");
-    ticker->addTick(50, "30");
-    ticker->addTick(75, "15");
-    ticker->addTick(100, "0");
-    ui->customPlot->xAxis->setTicker(ticker);
+    bool ok = false;
+    memory_usage = 100 * ((memory_available.toDouble(&ok)) / (memory_total.toDouble(&ok)));
+    swap_usage = 100 * ((swap_memory_cache.toDouble(&ok)) / (swap_memory_total.toDouble(&ok)));
+    qDebug() << memory_usage << swap_usage;
 
-    // configure left axis text labels:
-    QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
-    textTicker->addTick(0, "0%");
-    textTicker->addTick(20, "20%");
-    textTicker->addTick(40, "40%");
-    textTicker->addTick(60, "60%");
-    textTicker->addTick(80, "80%");
-    textTicker->addTick(100, "100%");
-    ui->customPlot->yAxis->setTicker(textTicker);
+    ui->customPlot->addGraph();
+    ui->customPlot->graph(0)->setPen(QPen(QColor(40, 110, 255)));
+    ui->customPlot->addGraph();
+    ui->customPlot->graph(1)->setPen(QPen(QColor(255, 110, 40)));
+
+    QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
+    timeTicker->setTimeFormat("%h:%m:%s");
+    ui->customPlot->xAxis->setTicker(timeTicker);
+
+    ui->customPlot->axisRect()->setupFullAxesBox();
+    ui->customPlot->yAxis->setRange(0, 100);
+
+    // make left and bottom axes transfer their ranges to right and top axes:
+    connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
+
+    // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
+    connect(dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
+    dataTimer->start(0); // Interval 0 means to refresh as fast as possible
+    ui->customPlot->replot();
+
 
     // set a more compact font size for bottom and left axis tick labels:
     ui->customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
@@ -416,7 +464,7 @@ void MainWindow::memswap_graph()
 
     // set axis labels:
     ui->customPlot->xAxis->setLabel("TIME\n\nMEMORY AND SWAP HISTORY");
-    ui->customPlot->yAxis->setLabel("MEMORY AND SWAP % USAGE");
+    ui->customPlot->yAxis->setLabel("MEMORY AND SWAP USAGE");
 
     // make top and right axes visible but without ticks and labels:
     ui->customPlot->xAxis2->setVisible(true);
@@ -425,10 +473,6 @@ void MainWindow::memswap_graph()
     ui->customPlot->yAxis2->setTicks(false);
     ui->customPlot->xAxis2->setTickLabels(false);
     ui->customPlot->yAxis2->setTickLabels(false);
-
-    // set axis ranges to show all data:
-    ui->customPlot->xAxis->setRange(now, now+24*3600*249);
-    ui->customPlot->yAxis->setRange(0, 100);
 
     // show legend with slightly transparent background brush:
     ui->customPlot->legend->setVisible(true);
@@ -441,49 +485,30 @@ void MainWindow::network_graph()
     ui->customPlot->rescaleAxes();
     ui->customPlot->clearPlottables();
     ui->customPlot->replot();
+    graph_choice = 3;
+    dataTimer->stop();
 
-    // set locale to english, so we get english month names:
-    ui->customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
-    // seconds of current time, we'll use it as starting point in time for data:
-    double now = QDateTime::currentDateTime().toTime_t();
-    srand(8); // set the random seed, so we always get the same random data
-    // create multiple graphs:
-    for (int gi=0; gi<5; ++gi)
-    {
-      ui->customPlot->addGraph();
-      QColor color(20+200/4.0*gi,70*(1.6-gi/4.0), 150, 150);
-      ui->customPlot->graph()->setPen(QPen(color));
-      // generate random walk data:
-      QVector<QCPGraphData> timeData(250);
-      for (int i=0; i<250; ++i)
-      {
-        timeData[i].key = now + 24*3600*i;
-        if (i == 0)
-          timeData[i].value = (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-        else
-          timeData[i].value = qFabs(timeData[i-1].value)*(1+0.02/4.0*(4-gi)) + (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-      }
-      ui->customPlot->graph()->data()->set(timeData);
-    }
+    ui->customPlot->addGraph(); // blue line
+    ui->customPlot->graph(0)->setPen(QPen(QColor(40, 110, 255)));
+    ui->customPlot->addGraph(); // red line
+    ui->customPlot->graph(1)->setPen(QPen(QColor(255, 110, 40)));
 
-    // configure bottom axis to show date instead of number:
-    QSharedPointer<QCPAxisTickerText> ticker(new QCPAxisTickerText);
-    ticker->addTick(0, "60");
-    ticker->addTick(25, "45");
-    ticker->addTick(50, "30");
-    ticker->addTick(75, "15");
-    ticker->addTick(100, "0");
-    ui->customPlot->xAxis->setTicker(ticker);
+    QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
+    timeTicker->setTimeFormat("%h:%m:%s");
+    ui->customPlot->xAxis->setTicker(timeTicker);
 
-    // configure left axis text labels:
-    QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
-    textTicker->addTick(0, "0%");
-    textTicker->addTick(20, "20%");
-    textTicker->addTick(40, "40%");
-    textTicker->addTick(60, "60%");
-    textTicker->addTick(80, "80%");
-    textTicker->addTick(100, "100%");
-    ui->customPlot->yAxis->setTicker(textTicker);
+    ui->customPlot->axisRect()->setupFullAxesBox();
+    ui->customPlot->yAxis->setRange(0.0, 20.0);
+
+    // make left and bottom axes transfer their ranges to right and top axes:
+    connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
+
+    // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
+    connect(dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
+    dataTimer->start(0); // Interval 0 means to refresh as fast as possible
+    ui->customPlot->replot();
+
 
     // set a more compact font size for bottom and left axis tick labels:
     ui->customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
@@ -491,7 +516,7 @@ void MainWindow::network_graph()
 
     // set axis labels:
     ui->customPlot->xAxis->setLabel("TIME\n\nNETWORK HISTORY");
-    ui->customPlot->yAxis->setLabel("NETWORK % USAGE");
+    ui->customPlot->yAxis->setLabel("NETWORK USAGE");
 
     // make top and right axes visible but without ticks and labels:
     ui->customPlot->xAxis2->setVisible(true);
@@ -500,10 +525,6 @@ void MainWindow::network_graph()
     ui->customPlot->yAxis2->setTicks(false);
     ui->customPlot->xAxis2->setTickLabels(false);
     ui->customPlot->yAxis2->setTickLabels(false);
-
-    // set axis ranges to show all data:
-    ui->customPlot->xAxis->setRange(now, now+24*3600*249);
-    ui->customPlot->yAxis->setRange(0, 100);
 
     // show legend with slightly transparent background brush:
     ui->customPlot->legend->setVisible(true);
@@ -531,8 +552,6 @@ void MainWindow::on_pushButton_3_clicked()
     else {
         network_graph();
     }
-
-
 }
 
 void MainWindow::on_pushButton_4_clicked()
