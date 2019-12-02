@@ -88,6 +88,7 @@ void MemMapMainWindow::setPid(QString myPid)
         else if (line.contains("Size", Qt::CaseInsensitive)) {
             QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
             vmsize = list.at(1);
+            vmsize.append(" KiB");
             count++;
         }
 

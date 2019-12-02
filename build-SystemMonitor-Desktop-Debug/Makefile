@@ -53,16 +53,20 @@ OBJECTS_DIR   = ./
 SOURCES       = ../SystemMonitor/main.cpp \
 		../SystemMonitor/mainwindow.cpp \
 		../SystemMonitor/myproperties.cpp \
-		../SystemMonitor/memmapmainwindow.cpp moc_mainwindow.cpp \
+		../SystemMonitor/memmapmainwindow.cpp \
+		../SystemMonitor/processfiles.cpp moc_mainwindow.cpp \
 		moc_myproperties.cpp \
-		moc_memmapmainwindow.cpp
+		moc_memmapmainwindow.cpp \
+		moc_processfiles.cpp
 OBJECTS       = main.o \
 		mainwindow.o \
 		myproperties.o \
 		memmapmainwindow.o \
+		processfiles.o \
 		moc_mainwindow.o \
 		moc_myproperties.o \
-		moc_memmapmainwindow.o
+		moc_memmapmainwindow.o \
+		moc_processfiles.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -144,10 +148,12 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		../SystemMonitor/SystemMonitor.pro ../SystemMonitor/mainwindow.h \
 		../SystemMonitor/myproperties.h \
-		../SystemMonitor/memmapmainwindow.h ../SystemMonitor/main.cpp \
+		../SystemMonitor/memmapmainwindow.h \
+		../SystemMonitor/processfiles.h ../SystemMonitor/main.cpp \
 		../SystemMonitor/mainwindow.cpp \
 		../SystemMonitor/myproperties.cpp \
-		../SystemMonitor/memmapmainwindow.cpp
+		../SystemMonitor/memmapmainwindow.cpp \
+		../SystemMonitor/processfiles.cpp
 QMAKE_TARGET  = SystemMonitor
 DESTDIR       = 
 TARGET        = SystemMonitor
@@ -156,7 +162,7 @@ TARGET        = SystemMonitor
 first: all
 ####### Build rules
 
-$(TARGET): ui_mainwindow.h ui_myproperties.h ui_memmapmainwindow.h $(OBJECTS)  
+$(TARGET): ui_mainwindow.h ui_myproperties.h ui_memmapmainwindow.h ui_processfiles.h $(OBJECTS)  
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(OBJCOMP) $(LIBS)
 
 Makefile: ../SystemMonitor/SystemMonitor.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
@@ -343,9 +349,9 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../SystemMonitor/mainwindow.h ../SystemMonitor/myproperties.h ../SystemMonitor/memmapmainwindow.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../SystemMonitor/main.cpp ../SystemMonitor/mainwindow.cpp ../SystemMonitor/myproperties.cpp ../SystemMonitor/memmapmainwindow.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../SystemMonitor/mainwindow.ui ../SystemMonitor/myproperties.ui ../SystemMonitor/memmapmainwindow.ui $(DISTDIR)/
+	$(COPY_FILE) --parents ../SystemMonitor/mainwindow.h ../SystemMonitor/myproperties.h ../SystemMonitor/memmapmainwindow.h ../SystemMonitor/processfiles.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../SystemMonitor/main.cpp ../SystemMonitor/mainwindow.cpp ../SystemMonitor/myproperties.cpp ../SystemMonitor/memmapmainwindow.cpp ../SystemMonitor/processfiles.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../SystemMonitor/mainwindow.ui ../SystemMonitor/myproperties.ui ../SystemMonitor/memmapmainwindow.ui ../SystemMonitor/processfiles.ui $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -377,11 +383,12 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 	g++ -pipe -g -Wall -W -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_mainwindow.cpp moc_myproperties.cpp moc_memmapmainwindow.cpp
+compiler_moc_header_make_all: moc_mainwindow.cpp moc_myproperties.cpp moc_memmapmainwindow.cpp moc_processfiles.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_mainwindow.cpp moc_myproperties.cpp moc_memmapmainwindow.cpp
+	-$(DEL_FILE) moc_mainwindow.cpp moc_myproperties.cpp moc_memmapmainwindow.cpp moc_processfiles.cpp
 moc_mainwindow.cpp: ../SystemMonitor/myproperties.h \
 		../SystemMonitor/memmapmainwindow.h \
+		../SystemMonitor/processfiles.h \
 		../SystemMonitor/mainwindow.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
@@ -397,11 +404,16 @@ moc_memmapmainwindow.cpp: ../SystemMonitor/memmapmainwindow.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/u/riker/u92/nayak6/cs252/lab6/System-Monitor/SystemMonitor -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtPrintSupport -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../SystemMonitor/memmapmainwindow.h -o moc_memmapmainwindow.cpp
 
+moc_processfiles.cpp: ../SystemMonitor/processfiles.h \
+		moc_predefs.h \
+		/usr/lib/qt5/bin/moc
+	/usr/lib/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/u/riker/u92/nayak6/cs252/lab6/System-Monitor/SystemMonitor -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtPrintSupport -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../SystemMonitor/processfiles.h -o moc_processfiles.cpp
+
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
-compiler_uic_make_all: ui_mainwindow.h ui_myproperties.h ui_memmapmainwindow.h
+compiler_uic_make_all: ui_mainwindow.h ui_myproperties.h ui_memmapmainwindow.h ui_processfiles.h
 compiler_uic_clean:
-	-$(DEL_FILE) ui_mainwindow.h ui_myproperties.h ui_memmapmainwindow.h
+	-$(DEL_FILE) ui_mainwindow.h ui_myproperties.h ui_memmapmainwindow.h ui_processfiles.h
 ui_mainwindow.h: ../SystemMonitor/mainwindow.ui \
 		/usr/lib/qt5/bin/uic
 	/usr/lib/qt5/bin/uic ../SystemMonitor/mainwindow.ui -o ui_mainwindow.h
@@ -413,6 +425,10 @@ ui_myproperties.h: ../SystemMonitor/myproperties.ui \
 ui_memmapmainwindow.h: ../SystemMonitor/memmapmainwindow.ui \
 		/usr/lib/qt5/bin/uic
 	/usr/lib/qt5/bin/uic ../SystemMonitor/memmapmainwindow.ui -o ui_memmapmainwindow.h
+
+ui_processfiles.h: ../SystemMonitor/processfiles.ui \
+		/usr/lib/qt5/bin/uic
+	/usr/lib/qt5/bin/uic ../SystemMonitor/processfiles.ui -o ui_processfiles.h
 
 compiler_yacc_decl_make_all:
 compiler_yacc_decl_clean:
@@ -426,12 +442,14 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean compiler_ui
 
 main.o: ../SystemMonitor/main.cpp ../SystemMonitor/mainwindow.h \
 		../SystemMonitor/myproperties.h \
-		../SystemMonitor/memmapmainwindow.h
+		../SystemMonitor/memmapmainwindow.h \
+		../SystemMonitor/processfiles.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../SystemMonitor/main.cpp
 
 mainwindow.o: ../SystemMonitor/mainwindow.cpp ../SystemMonitor/mainwindow.h \
 		../SystemMonitor/myproperties.h \
 		../SystemMonitor/memmapmainwindow.h \
+		../SystemMonitor/processfiles.h \
 		ui_mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../SystemMonitor/mainwindow.cpp
 
@@ -443,6 +461,10 @@ memmapmainwindow.o: ../SystemMonitor/memmapmainwindow.cpp ../SystemMonitor/memma
 		ui_memmapmainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o memmapmainwindow.o ../SystemMonitor/memmapmainwindow.cpp
 
+processfiles.o: ../SystemMonitor/processfiles.cpp ../SystemMonitor/processfiles.h \
+		ui_processfiles.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o processfiles.o ../SystemMonitor/processfiles.cpp
+
 moc_mainwindow.o: moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_mainwindow.o moc_mainwindow.cpp
 
@@ -451,6 +473,9 @@ moc_myproperties.o: moc_myproperties.cpp
 
 moc_memmapmainwindow.o: moc_memmapmainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_memmapmainwindow.o moc_memmapmainwindow.cpp
+
+moc_processfiles.o: moc_processfiles.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_processfiles.o moc_processfiles.cpp
 
 ####### Install
 

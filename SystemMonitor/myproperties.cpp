@@ -6,6 +6,9 @@
 #include <QMessageBox>
 #include <QFile>
 #include <QtGlobal>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 MyProperties::MyProperties(QWidget *parent) :
     QMainWindow(parent),
@@ -20,19 +23,28 @@ MyProperties::~MyProperties()
     delete ui;
 }
 
-void MyProperties::showProperties(QString processID, QString processName, QString CPUPer, QString memoryMIB, QString currentState) {
+void MyProperties::showProperties(QString processID, QString processName, QString CPUPer, QString memoryMIB, QString currentState, double cpuGTime) {
     QString pName = "Process Name       " + processName;
     ui->listWidget->addItem(pName);
 
-
     // For User Name
+
+    char flName[16];
+    QByteArray ba = processID.toLocal8Bit();
+    char* fs = ba.data();
+    sprintf(flName, "/proc/%s", fs);
+    struct stat flInfo;
+    if (stat(flName, &flInfo) == -1) {
+     perror("stat flInfo Failed");
+    }
 
     struct passwd *pwd;
             struct passwd pw;
             const size_t buffer_size = 513;
             char buffer[buffer_size];
-            uid_t id = processID.toInt();
-            getpwuid_r(id, &pw, buffer, buffer_size, &pwd);
+//            uid_t id = processID.toInt();
+            getpwuid_r(flInfo.st_uid, &pw, buffer, buffer_size, &pwd);
+
 //    struct passwd *pd;
 
 //    pd = getpwuid(processID.toInt());
@@ -43,9 +55,8 @@ void MyProperties::showProperties(QString processID, QString processName, QStrin
 
 //    QString userName =  QString::fromUtf8(pd->pw_name);
 //    userName.append(pd->pw_name);
-
-
-    ui->listWidget->addItem(pwd->pw_name);
+        QString uName = "User                      " + QString(pwd->pw_name);
+        ui->listWidget->addItem(uName);
     }
     else {
         perror("FAILURE passwd Struct");
@@ -146,9 +157,10 @@ void MyProperties::showProperties(QString processID, QString processName, QStrin
     ui->listWidget->addItem(serverMemory);
     QString cpu = "CPU                          " + QString::number(qRound64(CPUPer.toDouble())) + "%";
     ui->listWidget->addItem(cpu);
-    QString cpuTime = "CPU Time                     00:1233";
+    QString cpuTime = "CPU Time                     " + QString::number(cpuGTime) + " ticks";
     ui->listWidget->addItem(cpuTime);
-    QString sttTime = "Started                      Thur 04:30 PM";
+
+    QString sttTime = "Started                      " + QString(ctime(&flInfo.st_atime));
     ui->listWidget->addItem(sttTime);
     QString nVal = "Nice                               " + niceValue;
     ui->listWidget->addItem(nVal);
@@ -158,7 +170,7 @@ void MyProperties::showProperties(QString processID, QString processName, QStrin
     ui->listWidget->addItem(pid);
     QString sContext = "Security Context                  -----";
     ui->listWidget->addItem(sContext);
-    QString cmd = "Command Line                        "+cmdLine;
+    QString cmd = "Command Line                        " + cmdLine;
     ui->listWidget->addItem(cmd);
     QString wChannel = "Waiting Channel                     0";
     ui->listWidget->addItem(wChannel);
