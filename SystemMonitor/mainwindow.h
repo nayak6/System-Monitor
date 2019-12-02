@@ -3,6 +3,7 @@
 
 #include "myproperties.h"
 #include "memmapmainwindow.h"
+#include "processfiles.h"
 #include <QMainWindow>
 #include <QTreeWidget>
 
@@ -49,10 +50,13 @@ private slots:
 
     void on_actionUser_Processes_triggered();
 
+    void openProcessFiles();
+
 private:
     Ui::MainWindow *ui;
     MemMapMainWindow *mapp;
     MyProperties *propertiesNewWindow;
+    ProcessFiles *processFilesDialog;
 };
 
 #endif // MAINWINDOW_H
