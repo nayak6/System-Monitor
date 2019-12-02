@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_MainWindow_t {
-    QByteArrayData data[23];
-    char stringdata0[273];
+    QByteArrayData data[27];
+    char stringdata0[362];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -53,7 +53,11 @@ QT_MOC_LITERAL(18, 223, 3), // "pos"
 QT_MOC_LITERAL(19, 227, 8), // "killItem"
 QT_MOC_LITERAL(20, 236, 8), // "stopItem"
 QT_MOC_LITERAL(21, 245, 12), // "continueItem"
-QT_MOC_LITERAL(22, 258, 14) // "listProperties"
+QT_MOC_LITERAL(22, 258, 14), // "listProperties"
+QT_MOC_LITERAL(23, 273, 10), // "openMemMap"
+QT_MOC_LITERAL(24, 284, 32), // "on_actionAll_Processes_triggered"
+QT_MOC_LITERAL(25, 317, 10), // "allProcess"
+QT_MOC_LITERAL(26, 328, 33) // "on_actionUser_Processes_trigg..."
 
     },
     "MainWindow\0on_pushButton_clicked\0\0"
@@ -63,7 +67,9 @@ QT_MOC_LITERAL(22, 258, 14) // "listProperties"
     "AddChild\0QTreeWidgetItem*\0parent\0"
     "on_treeWidget_customContextMenuRequested\0"
     "pos\0killItem\0stopItem\0continueItem\0"
-    "listProperties"
+    "listProperties\0openMemMap\0"
+    "on_actionAll_Processes_triggered\0"
+    "allProcess\0on_actionUser_Processes_triggered"
 };
 #undef QT_MOC_LITERAL
 
@@ -73,7 +79,7 @@ static const uint qt_meta_data_MainWindow[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-      11,   14, // methods
+      15,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -81,17 +87,21 @@ static const uint qt_meta_data_MainWindow[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    0,   69,    2, 0x08 /* Private */,
-       3,    0,   70,    2, 0x08 /* Private */,
-       4,    0,   71,    2, 0x08 /* Private */,
-       5,    0,   72,    2, 0x08 /* Private */,
-       6,    7,   73,    2, 0x08 /* Private */,
-      14,    6,   88,    2, 0x08 /* Private */,
-      17,    1,  101,    2, 0x08 /* Private */,
-      19,    0,  104,    2, 0x08 /* Private */,
-      20,    0,  105,    2, 0x08 /* Private */,
-      21,    0,  106,    2, 0x08 /* Private */,
-      22,    0,  107,    2, 0x08 /* Private */,
+       1,    0,   89,    2, 0x08 /* Private */,
+       3,    0,   90,    2, 0x08 /* Private */,
+       4,    0,   91,    2, 0x08 /* Private */,
+       5,    0,   92,    2, 0x08 /* Private */,
+       6,    7,   93,    2, 0x08 /* Private */,
+      14,    6,  108,    2, 0x08 /* Private */,
+      17,    1,  121,    2, 0x08 /* Private */,
+      19,    0,  124,    2, 0x08 /* Private */,
+      20,    0,  125,    2, 0x08 /* Private */,
+      21,    0,  126,    2, 0x08 /* Private */,
+      22,    0,  127,    2, 0x08 /* Private */,
+      23,    0,  128,    2, 0x08 /* Private */,
+      24,    0,  129,    2, 0x08 /* Private */,
+      25,    0,  130,    2, 0x08 /* Private */,
+      26,    0,  131,    2, 0x08 /* Private */,
 
  // slots: parameters
     QMetaType::Void,
@@ -101,6 +111,10 @@ static const uint qt_meta_data_MainWindow[] = {
     QMetaType::Int, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::Int,    7,    8,    9,   10,   11,   12,   13,
     QMetaType::Void, 0x80000000 | 15, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString,   16,    7,    8,    9,   10,   11,
     QMetaType::Void, QMetaType::QPoint,   18,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
@@ -127,6 +141,10 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 8: _t->stopItem(); break;
         case 9: _t->continueItem(); break;
         case 10: _t->listProperties(); break;
+        case 11: _t->openMemMap(); break;
+        case 12: _t->on_actionAll_Processes_triggered(); break;
+        case 13: _t->allProcess(); break;
+        case 14: _t->on_actionUser_Processes_triggered(); break;
         default: ;
         }
     }
@@ -157,13 +175,13 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 11)
+        if (_id < 15)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 11;
+        _id -= 15;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 11)
+        if (_id < 15)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 11;
+        _id -= 15;
     }
     return _id;
 }

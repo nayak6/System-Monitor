@@ -32,6 +32,8 @@ class Ui_MainWindow
 public:
     QAction *actionbutton;
     QAction *actionmy_info;
+    QAction *actionAll_Processes;
+    QAction *actionUser_Processes;
     QWidget *centralWidget;
     QGridLayout *gridLayout;
     QListWidget *listWidget;
@@ -57,6 +59,10 @@ public:
         actionbutton->setObjectName(QStringLiteral("actionbutton"));
         actionmy_info = new QAction(MainWindow);
         actionmy_info->setObjectName(QStringLiteral("actionmy_info"));
+        actionAll_Processes = new QAction(MainWindow);
+        actionAll_Processes->setObjectName(QStringLiteral("actionAll_Processes"));
+        actionUser_Processes = new QAction(MainWindow);
+        actionUser_Processes->setObjectName(QStringLiteral("actionUser_Processes"));
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         gridLayout = new QGridLayout(centralWidget);
@@ -132,6 +138,8 @@ public:
         menuBar->addAction(menuView->menuAction());
         menuBar->addAction(menuHelp->menuAction());
         menupush->addAction(actionmy_info);
+        menuView->addAction(actionAll_Processes);
+        menuView->addAction(actionUser_Processes);
 
         retranslateUi(MainWindow);
 
@@ -143,6 +151,8 @@ public:
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", Q_NULLPTR));
         actionbutton->setText(QApplication::translate("MainWindow", "button", Q_NULLPTR));
         actionmy_info->setText(QApplication::translate("MainWindow", "my info", Q_NULLPTR));
+        actionAll_Processes->setText(QApplication::translate("MainWindow", "All Processes", Q_NULLPTR));
+        actionUser_Processes->setText(QApplication::translate("MainWindow", "User Processes", Q_NULLPTR));
         pushButton->setText(QApplication::translate("MainWindow", "System", Q_NULLPTR));
         pushButton_4->setText(QApplication::translate("MainWindow", "File Systems", Q_NULLPTR));
         pushButton_3->setText(QApplication::translate("MainWindow", "Resources", Q_NULLPTR));
