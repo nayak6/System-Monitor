@@ -126,9 +126,15 @@ void MyProperties::showProperties(QString processID, QString processName, QStrin
 
     QString status = "Status                    " + currentState;
     ui->listWidget->addItem(status);
-    QString memory = "Memory                    " + QString::number( memoryMIB.toDouble()/7) + " MiB";
+
+
+    QStringList vList = memoryMIB.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+
+
+    QString memory = "Memory                    " + QString::number( vList.at(0).toDouble()/7) + " MiB";
     ui->listWidget->addItem(memory);
-    QString virtualMemory = "Virtual Memory         " + memoryMIB + " MiB";
+
+    QString virtualMemory = "Virtual Memory         " + memoryMIB;
     ui->listWidget->addItem(virtualMemory);
     QString residentMemory = "Resident Memory        " + QString::number( residentMem) + " MiB";
     ui->listWidget->addItem(residentMemory);
@@ -158,12 +164,4 @@ void MyProperties::showProperties(QString processID, QString processName, QStrin
     ui->listWidget->addItem(wChannel);
     QString cGroup = "Control Group                    /usr/.cdsl";
     ui->listWidget->addItem(cGroup);
-
-
-
-
-
-
-
-
 }
