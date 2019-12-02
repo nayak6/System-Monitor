@@ -42,28 +42,14 @@ void MyProperties::showProperties(QString processID, QString processName, QStrin
             struct passwd pw;
             const size_t buffer_size = 513;
             char buffer[buffer_size];
-//            uid_t id = processID.toInt();
             getpwuid_r(flInfo.st_uid, &pw, buffer, buffer_size, &pwd);
 
-//    struct passwd *pd;
-
-//    pd = getpwuid(processID.toInt());
-//     pd = getpwuid(6321);
     if (pwd) {
-
-
-
-//    QString userName =  QString::fromUtf8(pd->pw_name);
-//    userName.append(pd->pw_name);
         QString uName = "User                      " + QString(pwd->pw_name);
         ui->listWidget->addItem(uName);
     }
     else {
         perror("FAILURE passwd Struct");
-//        QDebug()<<processID.toInt();
-//        std::cout << processID.toInt()<< std::endl;
-//        std::cout << pwd->pw_name;
-//        ui->listWidget->
         QString uName = "User                      nayak6";
         ui->listWidget->addItem(uName);
     }

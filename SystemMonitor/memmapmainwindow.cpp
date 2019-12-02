@@ -22,7 +22,6 @@ MemMapMainWindow::~MemMapMainWindow()
 
 void MemMapMainWindow::setPid(QString myPid)
 {
-    qDebug() << myPid;
     globalPid = myPid;
     QString filenamee = "/proc/";
     filenamee += globalPid;
@@ -47,7 +46,6 @@ void MemMapMainWindow::setPid(QString myPid)
 
         qDebug() << line;
         if (line.contains("-",  Qt::CaseInsensitive)) {
-            //printf("%s our linne\n", line);
             QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
             flags = list.at(1);
             vmoffset = list.at(2);

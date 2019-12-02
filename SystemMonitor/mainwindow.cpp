@@ -129,13 +129,12 @@ double calculateCpuTime(QString pidd) {
     QString line2 = in2.readLine();
     QStringList list2 = line2.split(QRegExp("\\s+"), QString::SkipEmptyParts);
     QString userTime = list2.at(1);
-    qDebug() << userTime;
     QString niceTime = list2.at(2);
     QString systemTime = list2.at(3);
 
     bool ok = false;
     cpuTime = uTime.toDouble() + sTime.toDouble();
-    double cpu_time = 100 * 100 * (uTime.toDouble(&ok) + sTime.toDouble(&ok)) / (userTime.toDouble(&ok) + niceTime.toDouble(&ok) + systemTime.toDouble(&ok));
+    double cpu_time = 100 * 10 * (uTime.toDouble(&ok) + sTime.toDouble(&ok)) / (userTime.toDouble(&ok) + niceTime.toDouble(&ok) + systemTime.toDouble(&ok));
     return cpu_time;
 }
 
@@ -379,7 +378,8 @@ void MainWindow::on_pushButton_2_clicked()
                 QString memory = ( QString::number(list.at(1).toDouble(&ok) / 1024));
 
                 //returns i number of subprocesses that we can subtract from the n count loop
-                int counter = MainWindow::AddParent(name, status, cputime, id, memory, ppid, k);
+//                int counter =
+                MainWindow::AddParent(name, status, cputime, id, memory, ppid, k);
                 //then use another loop to free all those namelist entries
     //            for(int i = 0; i < counter; i++) {
     //                free(namelist[n - i]);
@@ -391,10 +391,6 @@ void MainWindow::on_pushButton_2_clicked()
 
         }
     }
-
-
-
-
 }
 
 
@@ -503,8 +499,7 @@ void MainWindow::allProcess() {
         perror("Not enough memory.");
     else {
         int k = n;
-        while(n--){
-            
+        while(n--){ 
             QString filename = "/proc/";
             filename += (namelist[n]->d_name);
             filename += ("/status");
@@ -517,8 +512,6 @@ void MainWindow::allProcess() {
             QString name;
             QString status;
             QString memSize;
-            qDebug() << filename;
-            qDebug() << "-----------------";
             while(!line.isNull()) {
                 if (line.contains("Name", Qt::CaseInsensitive)) {
                     QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
@@ -541,6 +534,7 @@ void MainWindow::allProcess() {
                 }
                 line = in.readLine();
             }
+
             double cpu = calculateCpuTime(namelist[n]->d_name);
             QString cputime = QString::number(cpu);
             QString id = namelist[n]->d_name;
@@ -552,7 +546,8 @@ void MainWindow::allProcess() {
                 QStringList list = memSize.split(QRegExp("\\s+"), QString::SkipEmptyParts);
                 QString memory = ( QString::number(list.at(1).toDouble(&ok) / 1024));
 
-                int counter = MainWindow::AddParent(name, status, cputime, id, memory, ppid, k);
+//                int counter =
+                MainWindow::AddParent(name, status, cputime, id, memory, ppid, k);
             }
         }
     }
