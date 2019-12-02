@@ -26,12 +26,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    memmapmainwindow.cpp
+        myproperties.cpp \
+        memmapmainwindow.cpp
 
 HEADERS += \
         mainwindow.h \
+    myproperties.h \
     memmapmainwindow.h
 
 FORMS += \
         mainwindow.ui \
+    myproperties.ui \
     memmapmainwindow.ui

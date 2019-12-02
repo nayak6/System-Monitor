@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "myproperties.h"
 #include "memmapmainwindow.h"
 #include <QMainWindow>
 #include <QTreeWidget>
@@ -38,6 +39,8 @@ private slots:
 
     void continueItem();
 
+    void listProperties();
+    
     void openMemMap();
 
     void on_actionAll_Processes_triggered();
@@ -49,6 +52,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     MemMapMainWindow *mapp;
+    MyProperties *propertiesNewWindow;
 };
 
 #endif // MAINWINDOW_H

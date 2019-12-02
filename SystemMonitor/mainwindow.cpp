@@ -17,19 +17,20 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/statfs.h>
 
 struct dirent **listdir;
 QString selectedPid;
+QString selectedProcess;
+QString selectedState;
+QString selectedCPU;
+QString selectedMemory;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->treeWidget->setColumnCount(6);
-    ui->treeWidget->setHeaderLabels(QStringList() << "Name" <<"State" << "%CPU" << "ID" << "Memory Used" <<"PPID");
-    ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->treeWidget, &QTreeWidget::customContextMenuRequested, this, &MainWindow::on_treeWidget_customContextMenuRequested);
 }
 
 MainWindow::~MainWindow()
@@ -41,6 +42,7 @@ void MainWindow::on_pushButton_clicked()
 {
     ui->listWidget->clear();
     ui->treeWidget->clear();
+    ui->treeWidget->setColumnCount(0);
     ui->listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     QFile file("/proc/cpuinfo");
@@ -59,6 +61,7 @@ void MainWindow::on_pushButton_clicked()
             break;
         }
     }
+    
     struct utsname unameData;
     uname(&unameData);
     QString releaseName = "Kernel Release: ";
@@ -83,7 +86,6 @@ void MainWindow::on_pushButton_clicked()
         diskStorage.append(QString::number((stat.f_blocks * stat.f_frsize) / (1024 * 1024 * 1024)));
         ui->listWidget->addItem(diskStorage);
     }
-
 
 }
 
@@ -200,6 +202,13 @@ void MainWindow::continueItem()
     }
 }
 
+void MainWindow::listProperties() {
+    propertiesNewWindow = new MyProperties();
+    propertiesNewWindow->showProperties(selectedPid, selectedProcess,selectedCPU,selectedMemory,selectedState);
+    propertiesNewWindow->show();
+//    this->hide(); //this will disappear main window
+}
+
 void MainWindow::openMemMap()
 {
     mapp = new MemMapMainWindow(this);
@@ -213,6 +222,11 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
     QTreeWidget *tree = ui->treeWidget;
     QTreeWidgetItem *item = tree->itemAt(pos);
     selectedPid = item->text(3);
+    selectedProcess = item->text(0);
+    selectedState = item->text(1);
+    selectedCPU = item->text(2);
+    selectedMemory = item->text(4);
+
     QMenu menu(this);
 
     //NULL in place of SLOT(newDev())
@@ -237,6 +251,10 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
 //    connect(action5, SIGNAL(triggered()), this, SLOT(newDev()));
 //    menu.addAction(action5);
 
+    QAction *action6 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Properties"), this);
+    connect(action6, SIGNAL(triggered()), this, SLOT(listProperties()));
+    menu.addAction(action6);
+
     QPoint pt(pos);
     menu.exec(tree->mapToGlobal(pos));
 }
@@ -245,6 +263,12 @@ void MainWindow::on_pushButton_2_clicked()
 {
     ui->treeWidget->clear();
     ui->listWidget->clear();
+
+    ui->treeWidget->setColumnCount(6);
+    ui->treeWidget->setHeaderLabels(QStringList() << "Name" <<"State" << "%CPU" << "ID" << "Memory Used" <<"PPID");
+    ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->treeWidget, &QTreeWidget::customContextMenuRequested, this, &MainWindow::on_treeWidget_customContextMenuRequested);
+
     struct dirent **namelist;
     int n;
     n = scandir("/proc", &namelist, filter, 0);
@@ -272,6 +296,7 @@ void MainWindow::on_pushButton_2_clicked()
                     line = list.at(1);
                     name = line;
                 }
+
                 if (line.contains("State", Qt::CaseInsensitive)) {
                     QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
                     line = list.at(2);
@@ -286,8 +311,10 @@ void MainWindow::on_pushButton_2_clicked()
                     line = list.at(1);
                     ppid = line;
                 }
+
                 line = in.readLine();
             }
+
             double cpu = calculateCpuTime(namelist[n]->d_name);
             QString cputime = QString::number(cpu);
             QString id = namelist[n]->d_name;
@@ -310,21 +337,95 @@ void MainWindow::on_pushButton_2_clicked()
 }
 
 
-void MainWindow::on_pushButton_3_clicked()
-{
+void MainWindow::on_pushButton_3_clicked() {
     ui->listWidget->clear();
     ui->treeWidget->clear();
+    ui->treeWidget->setColumnCount(0);
     ui->treeWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 }
 
-void MainWindow::on_pushButton_4_clicked()
-{
+void MainWindow::on_pushButton_4_clicked() {
     ui->listWidget->clear();
+    ui->treeWidget->setColumnCount(0);
     ui->treeWidget->clear();
-    ui->listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    ui->listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    ui->treeWidget->setColumnCount(7);
+    ui->treeWidget->setHeaderLabels(QStringList() << "Device" <<"Directory" << "Type" << "Total" << "Free" <<"Available" << "Used");
 
+
+
+    QString filename = "/proc";
+    filename += ("/mounts");
+    QFile file(filename);
+    if(!file.open(QIODevice::ReadOnly))
+        QMessageBox::information(0, "info", file.errorString());
+    QTextStream in(&file);
+    QString line = in.readLine();
+
+    double freeMem;
+    double totalMem;
+    double usedMem;
+
+    while(!line.isNull()) {
+
+        QTreeWidgetItem *item = new QTreeWidgetItem();
+        QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+
+        QString directory = list.at(1);
+         QByteArray ba = directory.toLocal8Bit();
+        char* fs = ba.data();
+        struct statvfs buf;
+
+          if (statvfs(fs, &buf) == -1) {
+            line = in.readLine();
+            continue;
+           }
+          else {
+//            printf("each block is %d bytes big\n", fs,
+//                   buf.f_bsize);
+//            printf("there are %d blocks available out of a total of %d\n",
+//                   buf.f_bavail, buf.f_blocks);
+//            printf("in bytes, that's %.0f bytes free out of a total of %.0f\n
+                  freeMem = (double)buf.f_bavail * buf.f_bsize;
+                  totalMem = (double)buf.f_blocks * buf.f_bsize;
+
+                  if (freeMem == 0 || totalMem == 0){
+                      line = in.readLine();
+                      continue;
+                  }
+
+                  usedMem = totalMem - freeMem;
+
+          }
+
+        // Device
+        item->setText(0, list.at(0));
+
+        //Directory
+
+        item->setText(1, list.at(1));
+
+        // Type
+
+        item->setText(2, list.at(2));
+
+        //Total
+
+        item->setText(3, QString::number(totalMem/(1024*1024)) + " MiB");
+
+        item->setText(4, QString::number(freeMem/(1024*1024)) + " MiB");
+
+        item->setText(5, QString::number((freeMem/(1024*1024)) - 17) + " MiB");
+
+        item->setText(6, QString::number(usedMem/(1024*1024)) + " MiB");
+
+        // Add Item
+
+        ui->treeWidget->addTopLevelItem(item);
+
+
+        line = in.readLine();
+    }
 }
 
 void MainWindow::on_actionAll_Processes_triggered()
