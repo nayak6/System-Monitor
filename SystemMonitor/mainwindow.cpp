@@ -145,7 +145,7 @@ int MainWindow::AddParent(QString name, QString status, QString cpu, QString id,
     item->setText(1, status);
     item->setText(2, cpu);
     item->setText(3, id);
-    item->setText(4, memory);
+    item->setText(4, memory + " MiB");
     item->setText(5, ppid);
     ui->treeWidget->addTopLevelItem(item);
     //make a loop here and implement a counter for all the processes
@@ -352,8 +352,6 @@ void MainWindow::on_pushButton_4_clicked() {
     ui->treeWidget->setColumnCount(7);
     ui->treeWidget->setHeaderLabels(QStringList() << "Device" <<"Directory" << "Type" << "Total" << "Free" <<"Available" << "Used");
 
-
-
     QString filename = "/proc";
     filename += ("/mounts");
     QFile file(filename);
@@ -381,11 +379,6 @@ void MainWindow::on_pushButton_4_clicked() {
             continue;
            }
           else {
-//            printf("each block is %d bytes big\n", fs,
-//                   buf.f_bsize);
-//            printf("there are %d blocks available out of a total of %d\n",
-//                   buf.f_bavail, buf.f_blocks);
-//            printf("in bytes, that's %.0f bytes free out of a total of %.0f\n
                   freeMem = (double)buf.f_bavail * buf.f_bsize;
                   totalMem = (double)buf.f_blocks * buf.f_bsize;
 
@@ -415,7 +408,7 @@ void MainWindow::on_pushButton_4_clicked() {
 
         item->setText(4, QString::number(freeMem/(1024*1024)) + " MiB");
 
-        item->setText(5, QString::number((freeMem/(1024*1024)) - 17) + " MiB");
+        item->setText(5, QString::number((freeMem/(1024*1024))) + " MiB");
 
         item->setText(6, QString::number(usedMem/(1024*1024)) + " MiB");
 
@@ -449,7 +442,7 @@ void MainWindow::allProcess() {
     else {
         int k = n;
         while(n--){
-
+            
             QString filename = "/proc/";
             filename += (namelist[n]->d_name);
             filename += ("/status");
