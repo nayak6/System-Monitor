@@ -39,10 +39,6 @@ void ProcessFiles::listOpenFiles(QString processID){
     sprintf(filePath, "/proc/%s/fd",pPid);
     if (chdir(filePath) != 0) {
         perror("chdir() to filePath failed");
-//        QMessageBox messageBox;
-//        messageBox.critical(0,"Error","Not a User Process : Not Accessible");
-//        messageBox.setFixedSize(500,200);
-//        return 1;
      }
 
     int pipe_fd[2];
@@ -58,9 +54,7 @@ void ProcessFiles::listOpenFiles(QString processID){
        }
 
       if(pid == 0) {
-
         dup2 (pipe_fd[1], STDOUT_FILENO);
-//        clo
         ::close(pipe_fd[0]);
         ::close(pipe_fd[1]);
         execlp("ls", "ls","-l", NULL);
@@ -69,13 +63,10 @@ void ProcessFiles::listOpenFiles(QString processID){
       }
       else {
           ::close(pipe_fd[1]);
-
           char str[512];
           FILE* fp = fdopen(pipe_fd[0], "r");
           while (fgets (str, 512, fp)!=NULL ) {
               QTreeWidgetItem *item = new QTreeWidgetItem();
-
-//              qDebug() << str;
 
               if (!strstr(str, "->")) {
                   continue;
@@ -100,13 +91,7 @@ void ProcessFiles::listOpenFiles(QString processID){
 
           ::close(pipe_fd[0]);
           fclose(fp);
-
-//        qDebug() << filePath;
-
-        wait(NULL);
+          wait(NULL);
 
       }
-
-
-
 }

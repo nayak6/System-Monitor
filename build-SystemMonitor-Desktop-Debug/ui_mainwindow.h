@@ -156,7 +156,7 @@ public:
         pushButton->setText(QApplication::translate("MainWindow", "System", Q_NULLPTR));
         pushButton_4->setText(QApplication::translate("MainWindow", "File Systems", Q_NULLPTR));
         pushButton_3->setText(QApplication::translate("MainWindow", "Resources", Q_NULLPTR));
-        pushButton_2->setText(QApplication::translate("MainWindow", "Processes", Q_NULLPTR));
+        pushButton_2->setText(QApplication::translate("MainWindow", "Processes/Refresh", Q_NULLPTR));
         menupush->setTitle(QApplication::translate("MainWindow", "Monitor", Q_NULLPTR));
         menuEdit->setTitle(QApplication::translate("MainWindow", "Edit", Q_NULLPTR));
         menuView->setTitle(QApplication::translate("MainWindow", "View", Q_NULLPTR));
