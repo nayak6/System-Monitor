@@ -25,6 +25,7 @@ QString selectedProcess;
 QString selectedState;
 QString selectedCPU;
 QString selectedMemory;
+double cpuTime;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -125,12 +126,14 @@ double calculateCpuTime(QString pidd) {
     QTextStream in2(&file2);
     QString line2 = in2.readLine();
     QStringList list2 = line2.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-    QString userTime = list2.at(0);
-    QString niceTime = list2.at(1);
-    QString systemTime = list2.at(2);
+    QString userTime = list2.at(1);
+    qDebug() << userTime;
+    QString niceTime = list2.at(2);
+    QString systemTime = list2.at(3);
 
     bool ok = false;
-    double cpu_time = (uTime.toDouble(&ok) + sTime.toDouble(&ok)) / (userTime.toDouble(&ok) + niceTime.toDouble(&ok) + systemTime.toDouble(&ok));
+    cpuTime = uTime.toDouble() + sTime.toDouble();
+    double cpu_time = 100 * 100 * (uTime.toDouble(&ok) + sTime.toDouble(&ok)) / (userTime.toDouble(&ok) + niceTime.toDouble(&ok) + systemTime.toDouble(&ok));
     return cpu_time;
 }
 
@@ -157,6 +160,7 @@ int MainWindow::AddParent(QString name, QString status, QString cpu, QString id,
 //    while(counter--) {
 //        if(listname[counter]->d_name)
 //    }
+
     return count;
 }
 
@@ -204,7 +208,7 @@ void MainWindow::continueItem()
 
 void MainWindow::listProperties() {
     propertiesNewWindow = new MyProperties();
-    propertiesNewWindow->showProperties(selectedPid, selectedProcess,selectedCPU,selectedMemory,selectedState);
+    propertiesNewWindow->showProperties(selectedPid, selectedProcess,selectedCPU,selectedMemory,selectedState, cpuTime);
     propertiesNewWindow->show();
 //    this->hide(); //this will disappear main window
 }
@@ -214,6 +218,12 @@ void MainWindow::openMemMap()
     mapp = new MemMapMainWindow(this);
     mapp->setPid(selectedPid);
     mapp->show();
+}
+
+void MainWindow::openProcessFiles(){
+    processFilesDialog = new ProcessFiles();
+    processFilesDialog->listOpenFiles(selectedPid);
+    processFilesDialog->show();
 }
 
 //Menu box on right clicking a process
@@ -246,10 +256,9 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
     connect(action4, SIGNAL(triggered()), this, SLOT(openMemMap()));
     menu.addAction(action4);
 
-//    QAction *action5 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Open Files"), this);
-//    action5->setStatusTip(tr("new sth"));
-//    connect(action5, SIGNAL(triggered()), this, SLOT(newDev()));
-//    menu.addAction(action5);
+    QAction *action5 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Open Files"), this);
+    connect(action5, SIGNAL(triggered()), this, SLOT(openProcessFiles()));
+    menu.addAction(action5);
 
     QAction *action6 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Properties"), this);
     connect(action6, SIGNAL(triggered()), this, SLOT(listProperties()));
@@ -370,7 +379,7 @@ void MainWindow::on_pushButton_4_clicked() {
         QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
 
         QString directory = list.at(1);
-         QByteArray ba = directory.toLocal8Bit();
+        QByteArray ba = directory.toLocal8Bit();
         char* fs = ba.data();
         struct statvfs buf;
 

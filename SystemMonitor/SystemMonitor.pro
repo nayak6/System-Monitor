@@ -27,14 +27,17 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
         myproperties.cpp \
-        memmapmainwindow.cpp
+        memmapmainwindow.cpp \
+    processfiles.cpp
 
 HEADERS += \
         mainwindow.h \
     myproperties.h \
-    memmapmainwindow.h
+    memmapmainwindow.h \
+    processfiles.h
 
 FORMS += \
         mainwindow.ui \
     myproperties.ui \
-    memmapmainwindow.ui
+    memmapmainwindow.ui \
+    processfiles.ui
