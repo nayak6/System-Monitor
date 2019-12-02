@@ -66,7 +66,7 @@
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Processes</string>
+       <string>Processes/Refresh</string>
       </property>
      </widget>
     </item>

@@ -27,6 +27,8 @@ QString selectedCPU;
 QString selectedMemory;
 double cpuTime;
 
+int selectedUserProcesses = 1;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -206,6 +208,28 @@ void MainWindow::continueItem()
     }
 }
 
+bool isUserProcess(char *thePid) {
+    uid_t user;
+    struct stat dirinfo;
+    int len = strlen(thePid) + 7;
+    char path[len];
+
+    strcpy(path, "/proc/");
+    strcat(path, thePid);
+    user = getuid();
+    if (stat(path, &dirinfo) < 0) {
+        perror("processdir() ==> stat()");
+        exit(EXIT_FAILURE);
+    }
+
+    if (user == dirinfo.st_uid) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 void MainWindow::listProperties() {
     propertiesNewWindow = new MyProperties();
     propertiesNewWindow->showProperties(selectedPid, selectedProcess,selectedCPU,selectedMemory,selectedState, cpuTime);
@@ -215,15 +239,34 @@ void MainWindow::listProperties() {
 
 void MainWindow::openMemMap()
 {
-    mapp = new MemMapMainWindow(this);
-    mapp->setPid(selectedPid);
-    mapp->show();
+    QByteArray ba = selectedPid.toLocal8Bit();
+    char *fs = ba.data();
+    if (isUserProcess(fs)) {
+        mapp = new MemMapMainWindow(this);
+        mapp->setPid(selectedPid);
+        mapp->show();
+    }
+    else {
+        QMessageBox mBox;
+        mBox.critical(0, "ERROR", "Not an user process!");
+        mBox.setFixedSize(500,200);
+    }
 }
 
 void MainWindow::openProcessFiles(){
-    processFilesDialog = new ProcessFiles();
-    processFilesDialog->listOpenFiles(selectedPid);
-    processFilesDialog->show();
+    QByteArray ba = selectedPid.toLocal8Bit();
+    char *fs = ba.data();
+    if (isUserProcess(fs)) {
+        processFilesDialog = new ProcessFiles();
+        processFilesDialog->listOpenFiles(selectedPid);
+        processFilesDialog->show();
+    }
+    else {
+        QMessageBox mBox;
+        mBox.critical(0, "ERROR", "Not an user process!");
+        mBox.setFixedSize(500,200);
+    }
+
 }
 
 //Menu box on right clicking a process
@@ -278,71 +321,80 @@ void MainWindow::on_pushButton_2_clicked()
     ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->treeWidget, &QTreeWidget::customContextMenuRequested, this, &MainWindow::on_treeWidget_customContextMenuRequested);
 
-    struct dirent **namelist;
-    int n;
-    n = scandir("/proc", &namelist, filter, 0);
-    if (n < 0)
-        perror("Not enough memory.");
+    if (selectedUserProcesses == 0) {
+        allProcess();
+    }
     else {
-        int k = n;
-        while(n--){
+        struct dirent **namelist;
+        int n;
+        n = scandir("/proc", &namelist, filter, 0);
+        if (n < 0)
+            perror("Not enough memory.");
+        else {
+            int k = n;
+            while(n--){
 
-            QString filename = "/proc/";
-            filename += (namelist[n]->d_name);
-            filename += ("/status");
-            QFile file(filename);
-            if(!file.open(QIODevice::ReadOnly))
-                QMessageBox::information(0, "info", file.errorString());
-            QTextStream in(&file);
-            QString line = in.readLine();
-            QString ppid;
-            QString name;
-            QString status;
-            QString memSize;
-            while(!line.isNull()) {
-                if (line.contains("Name", Qt::CaseInsensitive)) {
-                    QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-                    line = list.at(1);
-                    name = line;
+                QString filename = "/proc/";
+                filename += (namelist[n]->d_name);
+                filename += ("/status");
+                QFile file(filename);
+                if(!file.open(QIODevice::ReadOnly))
+                    QMessageBox::information(0, "info", file.errorString());
+                QTextStream in(&file);
+                QString line = in.readLine();
+                QString ppid;
+                QString name;
+                QString status;
+                QString memSize;
+                while(!line.isNull()) {
+                    if (line.contains("Name", Qt::CaseInsensitive)) {
+                        QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                        line = list.at(1);
+                        name = line;
+                    }
+
+                    if (line.contains("State", Qt::CaseInsensitive)) {
+                        QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                        line = list.at(2);
+                        status = line;
+                    }
+                    if (line.contains("VmSize", Qt::CaseInsensitive)) {
+                        memSize = line;
+                    }
+
+                    if(line.contains("PPid", Qt::CaseInsensitive)) {
+                        QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                        line = list.at(1);
+                        ppid = line;
+                    }
+
+                    line = in.readLine();
                 }
 
-                if (line.contains("State", Qt::CaseInsensitive)) {
-                    QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-                    line = list.at(2);
-                    status = line;
-                }
-                if (line.contains("VmSize", Qt::CaseInsensitive)) {
-                    memSize = line;
-                }
+                double cpu = calculateCpuTime(namelist[n]->d_name);
+                QString cputime = QString::number(cpu);
+                QString id = namelist[n]->d_name;
+                bool ok = false;
+                QStringList list = memSize.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                QString memory = ( QString::number(list.at(1).toDouble(&ok) / 1024));
 
-                if(line.contains("PPid", Qt::CaseInsensitive)) {
-                    QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-                    line = list.at(1);
-                    ppid = line;
-                }
+                //returns i number of subprocesses that we can subtract from the n count loop
+                int counter = MainWindow::AddParent(name, status, cputime, id, memory, ppid, k);
+                //then use another loop to free all those namelist entries
+    //            for(int i = 0; i < counter; i++) {
+    //                free(namelist[n - i]);
+    //            }
 
-                line = in.readLine();
             }
 
-            double cpu = calculateCpuTime(namelist[n]->d_name);
-            QString cputime = QString::number(cpu);
-            QString id = namelist[n]->d_name;
-            bool ok = false;
-            QStringList list = memSize.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-            QString memory = ( QString::number(list.at(1).toDouble(&ok) / 1024));
-
-            //returns i number of subprocesses that we can subtract from the n count loop
-            int counter = MainWindow::AddParent(name, status, cputime, id, memory, ppid, k);
-            //then use another loop to free all those namelist entries
-//            for(int i = 0; i < counter; i++) {
-//                free(namelist[n - i]);
-//            }
+            //free(namelist);
 
         }
-
-        //free(namelist);
-
     }
+
+
+
+
 }
 
 
@@ -432,6 +484,7 @@ void MainWindow::on_pushButton_4_clicked() {
 
 void MainWindow::on_actionAll_Processes_triggered()
 {
+    selectedUserProcesses = 0;
     allProcess();
 }
 
@@ -507,5 +560,6 @@ void MainWindow::allProcess() {
 
 void MainWindow::on_actionUser_Processes_triggered()
 {
+    selectedUserProcesses = 1;
     on_pushButton_2_clicked();
 }
