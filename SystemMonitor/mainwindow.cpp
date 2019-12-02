@@ -134,7 +134,7 @@ double calculateCpuTime(QString pidd) {
 
     bool ok = false;
     cpuTime = uTime.toDouble() + sTime.toDouble();
-    double cpu_time = 100 * 10 * (uTime.toDouble(&ok) + sTime.toDouble(&ok)) / (userTime.toDouble(&ok) + niceTime.toDouble(&ok) + systemTime.toDouble(&ok));
+    double cpu_time = 100 * 100 * (uTime.toDouble(&ok) + sTime.toDouble(&ok)) / (userTime.toDouble(&ok) + niceTime.toDouble(&ok) + systemTime.toDouble(&ok));
     return cpu_time;
 }
 
@@ -147,7 +147,7 @@ int MainWindow::AddParent(QString name, QString status, QString cpu, QString id,
     QTreeWidgetItem *item = new QTreeWidgetItem();
     item->setText(0, name);
     item->setText(1, status);
-    item->setText(2, cpu);
+    item->setText(2, QString::number( cpu.toDouble(), 'f', 6));
     item->setText(3, id);
     item->setText(4, memory + " MiB");
     item->setText(5, ppid);
