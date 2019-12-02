@@ -17,13 +17,20 @@
 #include <unistd.h>
 
 struct dirent **listdir;
-int graph_decider = 0;
 QTimer *dataTimer = new QTimer();
-int process_count = 0;
+
+int graph_decider = 0;
 int graph_choice = 1;
 double *cpu_usage;
 double swap_usage;
 double memory_usage;
+double cpuArray[8];
+
+double previousReceived = 0;
+double previousSent = 0;
+
+double diffReceived = 1000;
+double diffSent = 1000;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -275,35 +282,135 @@ void MainWindow::on_pushButton_2_clicked()
     }
 }
 
+void MainWindow::update(int graph_choice) {
+    //cpu usage
+    if(graph_choice == 1) {
+        QString filename = "/proc/stat";
+        QFile file(filename);
+        if(!file.open(QIODevice::ReadOnly))
+            QMessageBox::information(0, "info", file.errorString());
+        QTextStream in(&file);
+        QString line = in.readLine();
+        int count = 0;
+        double totalCpu = 0;
+        bool ok = false;
+        while(!line.isNull()) {
+            if (line.contains("cpu")) {
+                if (count == 0) {
+                    QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                    for (int i = 1; i <= 9; i++) {
+                        totalCpu += list.at(i).toDouble(&ok);
+                    }
+                }
+                else {
+                    QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                    for (int i = 1; i <= 9; i++) {
+                        cpuArray[count - 1] += list.at(i).toDouble(&ok);
+                    }
+                    cpuArray[count - 1] = (cpuArray[count - 1] / totalCpu) * 100;
+                }
+                count++;
+            }
+            line = in.readLine();
+        }
+    }
+
+    //mem and swap
+    else if(graph_choice == 2) {
+        QString filename = "/proc/meminfo";
+        QFile file(filename);
+        if(!file.open(QIODevice::ReadOnly))
+            QMessageBox::information(0, "info", file.errorString());
+        QTextStream in(&file);
+        QString line = in.readLine();
+        QString memory_available;
+        QString memory_total;
+        QString swap_memory_cache;
+        QString swap_memory_total;
+        while(!line.isNull()) {
+            if (line.contains("MemAvailable", Qt::CaseInsensitive)) {
+                QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                memory_available = list.at(1);
+
+            }
+            if (line.contains("MemTotal", Qt::CaseInsensitive)) {
+                QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                memory_total = list.at(1);
+            }
+            if (line.contains("SwapCached", Qt::CaseInsensitive)) {
+                QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                swap_memory_cache = list.at(1);
+            }
+            if (line.contains("SwapTotal", Qt::CaseInsensitive)) {
+                QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                swap_memory_total = list.at(1);
+            }
+            line = in.readLine();
+        }
+
+        bool ok = false;
+        memory_usage = 100 * ((memory_available.toDouble(&ok)) / (memory_total.toDouble(&ok)));
+        swap_usage = 100 * ((swap_memory_cache.toDouble(&ok)) / (swap_memory_total.toDouble(&ok)));
+    }
+    else if (graph_choice == 3) {
+        QString filename = "/proc/net/dev";
+        QFile file(filename);
+        if(!file.open(QIODevice::ReadOnly))
+            QMessageBox::information(0, "info", file.errorString());
+        QTextStream in(&file);
+        QString line = in.readLine();
+        line = in.readLine();
+        line = in.readLine();
+
+        bool ok = false;
+        double received = 0;
+        double sent = 0;
+
+        while(!line.isNull()) {
+           QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+           received += list.at(1).toDouble(&ok);
+           sent += list.at(9).toDouble(&ok);
+           line = in.readLine();
+        }
+
+        diffReceived = received - previousReceived;
+        diffSent = sent - previousSent;
+
+        previousReceived = received;
+        previousSent = sent;
+    }
+}
+
 void MainWindow::realtimeDataSlot()
 {
     static QTime time(QTime::currentTime());
     // calculate two new data points:
     double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
     static double lastPointKey = 0;
-    if (key-lastPointKey > 0.002) // at most add point every 2 ms
+    if (key-lastPointKey > 1) // at most add point every 2 ms
     {
         if (graph_choice == 1) {
-            for(int i =0; i < process_count; i++) {
-                ui->customPlot->graph(i)->addData(key, cpu_usage[i]);
+            update(1);
+            for(int i =0; i < 8; i++) {
+                ui->customPlot->graph(i)->addData(key, cpuArray[i]);
+                //ui->customPlot->graph(i)->addData(key,cpu_usage[i]);
             }
         }
 
         else if (graph_choice == 2) {
             //mem and swap
+            update(2);
+            qDebug("%f %f",memory_usage, swap_usage);
             ui->customPlot->graph(0)->addData(key, memory_usage);
             ui->customPlot->graph(1)->addData(key, swap_usage);
-//            ui->statusBar->showMessage(
-//                  QString("Memory\n%1 % used")
-//                  .arg(memory_usage, 0, '%.2f', 0), 0);
-
-//            ui->statusBar->showMessage(
-//                  QString("Swap\n%1 % used")
-//                  .arg(swap_usage, 0, 'f', 0), 0);
         }
 
         else {
             //network
+            update(3);
+            qDebug("Rec : %f Sent : %f",diffReceived/1024, diffSent/1024);
+            ui->customPlot->graph(0)->addData(key, diffReceived / 1024);
+            ui->customPlot->graph(1)->addData(key, diffSent / 1024);
         }
       lastPointKey = key;
     }
@@ -335,32 +442,47 @@ void MainWindow::cpu_graph()
 
     graph_choice = 1;
     dataTimer->stop();
-    process_count = 0;
 
-    struct dirent **list;
-    int n;
-    n = scandir("/proc", &list, filter, 0);
-    if (n < 0)
-        perror("Not enough memory.");
-    else {
-        cpu_usage = new double[n];
-        int k = n;
-        while(n--){
-            cpu_usage[process_count] = calculateCpuTime(list[n]->d_name);
-            ui->customPlot->addGraph();
-            ui->customPlot->graph(process_count)->setPen(QPen(QColor(n, 2*n, 2*n)));
-            process_count++;
+    QString filename = "/proc/stat";
+    QFile file(filename);
+    if(!file.open(QIODevice::ReadOnly))
+        QMessageBox::information(0, "info", file.errorString());
+    QTextStream in(&file);
+    QString line = in.readLine();
+    int count = 0;
+    double totalCpu = 0;
+    bool ok = false;
+    while(!line.isNull()) {
+        if (line.contains("cpu")) {
+            if (count == 0) {
+                QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                for (int i = 1; i <= 9; i++) {
+                    totalCpu += list.at(i).toDouble(&ok);
+                }
+            }
+            else {
+                QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                for (int i = 1; i <= 9; i++) {
+                    cpuArray[count - 1] += list.at(i).toDouble(&ok);
+                }
+                cpuArray[count - 1] = (cpuArray[count - 1] / totalCpu) * 100;
+                ui->customPlot->addGraph();
+                ui->customPlot->graph(count-1)->setPen(QPen(QColor(count - 1, 2 * (count - 1), 2 * (count - 1) )));
+            }
+            count++;
         }
+        line = in.readLine();
     }
+
 
     QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
     timeTicker->setTimeFormat("%h:%m:%s");
     ui->customPlot->xAxis->setTicker(timeTicker);
 
     ui->customPlot->axisRect()->setupFullAxesBox();
-    ui->customPlot->yAxis->setRange(0, 0.0000005);
+    ui->customPlot->yAxis->setRange(12.5, 12.55);
 
-    // make left and bottom axes transfer their ranges to right and toQTimer *dataTimer = new QTimer();p axes:
+    // make left and bottom axes transfer their ranges to right and top axes:
     connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
     connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
 
@@ -434,7 +556,6 @@ void MainWindow::memswap_graph()
     bool ok = false;
     memory_usage = 100 * ((memory_available.toDouble(&ok)) / (memory_total.toDouble(&ok)));
     swap_usage = 100 * ((swap_memory_cache.toDouble(&ok)) / (swap_memory_total.toDouble(&ok)));
-    qDebug() << memory_usage << swap_usage;
 
     ui->customPlot->addGraph();
     ui->customPlot->graph(0)->setPen(QPen(QColor(40, 110, 255)));
@@ -488,17 +609,71 @@ void MainWindow::network_graph()
     graph_choice = 3;
     dataTimer->stop();
 
-    ui->customPlot->addGraph(); // blue line
+    QString filename = "/proc/net/dev";
+    QFile file(filename);
+    if(!file.open(QIODevice::ReadOnly))
+        QMessageBox::information(0, "info", file.errorString());
+    QTextStream in(&file);
+    QString line = in.readLine();
+    line = in.readLine();
+    line = in.readLine();
+
+    bool ok = false;
+    double received = 0;
+    double sent = 0;
+
+    while(!line.isNull()) {
+       QStringList list = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+       received += list.at(1).toDouble(&ok);
+       sent += list.at(9).toDouble(&ok);
+       line = in.readLine();
+    }
+
+    previousReceived = received;
+    previousSent = sent;
+
+
+//    QFile file2(filename);
+//    if(!file2.open(QIODevice::ReadOnly))
+//        QMessageBox::information(0, "info", file2.errorString());
+//    QTextStream in2(&file2);
+//    QString line2 = in2.readLine();
+//    line2 = in2.readLine();
+//    line2 = in2.readLine();
+
+//    received = 0;
+//    sent = 0;
+//    while(!line2.isNull()) {
+//       QStringList list = line2.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+//       received += list.at(1).toDouble(&ok);
+//       sent += list.at(9).toDouble(&ok);
+//       line2 = in2.readLine();
+//    }
+
+//    diffReceived = received - previousReceived;
+//    diffSent = sent - previousSent;
+
+
+
+//    qDebug("Recent Received : %f and Sent : %f", received, sent);
+//    qDebug("Prev Received : %f and Sent : %f", previousReceived, previousSent);
+//    qDebug("Diff Received : %f and Sent : %f", diffReceived, diffSent);
+
+//    previousReceived = received;
+//    previousSent = sent;
+
+    ui->customPlot->addGraph();
     ui->customPlot->graph(0)->setPen(QPen(QColor(40, 110, 255)));
-    ui->customPlot->addGraph(); // red line
+    ui->customPlot->addGraph();
     ui->customPlot->graph(1)->setPen(QPen(QColor(255, 110, 40)));
+
 
     QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
     timeTicker->setTimeFormat("%h:%m:%s");
     ui->customPlot->xAxis->setTicker(timeTicker);
 
     ui->customPlot->axisRect()->setupFullAxesBox();
-    ui->customPlot->yAxis->setRange(0.0, 20.0);
+    ui->customPlot->yAxis->setRange(0.0, 10.0);
 
     // make left and bottom axes transfer their ranges to right and top axes:
     connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));

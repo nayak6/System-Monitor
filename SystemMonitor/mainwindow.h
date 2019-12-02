@@ -39,6 +39,8 @@ private slots:
 
     void realtimeDataSlot();
 
+    void update(int graph_choice);
+
 private:
     Ui::MainWindow *ui;
 };

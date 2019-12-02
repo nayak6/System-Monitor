@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_MainWindow_t {
-    QByteArrayData data[22];
-    char stringdata0[265];
+    QByteArrayData data[25];
+    char stringdata0[302];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -52,7 +52,10 @@ QT_MOC_LITERAL(17, 182, 40), // "on_treeWidget_customContextMe..."
 QT_MOC_LITERAL(18, 223, 3), // "pos"
 QT_MOC_LITERAL(19, 227, 9), // "cpu_graph"
 QT_MOC_LITERAL(20, 237, 13), // "memswap_graph"
-QT_MOC_LITERAL(21, 251, 13) // "network_graph"
+QT_MOC_LITERAL(21, 251, 13), // "network_graph"
+QT_MOC_LITERAL(22, 265, 16), // "realtimeDataSlot"
+QT_MOC_LITERAL(23, 282, 6), // "update"
+QT_MOC_LITERAL(24, 289, 12) // "graph_choice"
 
     },
     "MainWindow\0on_pushButton_clicked\0\0"
@@ -61,7 +64,8 @@ QT_MOC_LITERAL(21, 251, 13) // "network_graph"
     "name\0status\0cpu\0id\0memory\0ppid\0k\0"
     "AddChild\0QTreeWidgetItem*\0parent\0"
     "on_treeWidget_customContextMenuRequested\0"
-    "pos\0cpu_graph\0memswap_graph\0network_graph"
+    "pos\0cpu_graph\0memswap_graph\0network_graph\0"
+    "realtimeDataSlot\0update\0graph_choice"
 };
 #undef QT_MOC_LITERAL
 
@@ -71,7 +75,7 @@ static const uint qt_meta_data_MainWindow[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-      10,   14, // methods
+      12,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -79,16 +83,18 @@ static const uint qt_meta_data_MainWindow[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    0,   64,    2, 0x08 /* Private */,
-       3,    0,   65,    2, 0x08 /* Private */,
-       4,    0,   66,    2, 0x08 /* Private */,
-       5,    0,   67,    2, 0x08 /* Private */,
-       6,    7,   68,    2, 0x08 /* Private */,
-      14,    6,   83,    2, 0x08 /* Private */,
-      17,    1,   96,    2, 0x08 /* Private */,
-      19,    0,   99,    2, 0x08 /* Private */,
-      20,    0,  100,    2, 0x08 /* Private */,
-      21,    0,  101,    2, 0x08 /* Private */,
+       1,    0,   74,    2, 0x08 /* Private */,
+       3,    0,   75,    2, 0x08 /* Private */,
+       4,    0,   76,    2, 0x08 /* Private */,
+       5,    0,   77,    2, 0x08 /* Private */,
+       6,    7,   78,    2, 0x08 /* Private */,
+      14,    6,   93,    2, 0x08 /* Private */,
+      17,    1,  106,    2, 0x08 /* Private */,
+      19,    0,  109,    2, 0x08 /* Private */,
+      20,    0,  110,    2, 0x08 /* Private */,
+      21,    0,  111,    2, 0x08 /* Private */,
+      22,    0,  112,    2, 0x08 /* Private */,
+      23,    1,  113,    2, 0x08 /* Private */,
 
  // slots: parameters
     QMetaType::Void,
@@ -101,6 +107,8 @@ static const uint qt_meta_data_MainWindow[] = {
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,   24,
 
        0        // eod
 };
@@ -122,6 +130,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 7: _t->cpu_graph(); break;
         case 8: _t->memswap_graph(); break;
         case 9: _t->network_graph(); break;
+        case 10: _t->realtimeDataSlot(); break;
+        case 11: _t->update((*reinterpret_cast< int(*)>(_a[1]))); break;
         default: ;
         }
     }
@@ -152,13 +162,13 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 12)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 12;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 10)
+        if (_id < 12)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 10;
+        _id -= 12;
     }
     return _id;
 }
