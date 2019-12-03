@@ -52,6 +52,16 @@ private slots:
 
     void openProcessFiles();
 
+    void cpu_graph();
+
+    void memswap_graph();
+
+    void network_graph();
+
+    void realtimeDataSlot();
+
+    void update(int graph_choice);
+
 private:
     Ui::MainWindow *ui;
     MemMapMainWindow *mapp;

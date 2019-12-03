@@ -28,13 +28,15 @@ SOURCES += \
         mainwindow.cpp \
         myproperties.cpp \
         memmapmainwindow.cpp \
-    processfiles.cpp
+    processfiles.cpp \
+    qcustomplot.cpp
 
 HEADERS += \
         mainwindow.h \
     myproperties.h \
     memmapmainwindow.h \
-    processfiles.h
+    processfiles.h \
+    qcustomplot.h
 
 FORMS += \
         mainwindow.ui \

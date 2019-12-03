@@ -24,6 +24,7 @@
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QWidget>
+#include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -36,12 +37,13 @@ public:
     QAction *actionUser_Processes;
     QWidget *centralWidget;
     QGridLayout *gridLayout;
-    QListWidget *listWidget;
-    QPushButton *pushButton;
-    QPushButton *pushButton_4;
-    QPushButton *pushButton_3;
     QPushButton *pushButton_2;
     QTreeWidget *treeWidget;
+    QPushButton *pushButton;
+    QListWidget *listWidget;
+    QPushButton *pushButton_3;
+    QPushButton *pushButton_4;
+    QCustomPlot *customPlot;
     QMenuBar *menuBar;
     QMenu *menupush;
     QMenu *menuEdit;
@@ -69,27 +71,32 @@ public:
         gridLayout->setSpacing(6);
         gridLayout->setContentsMargins(11, 11, 11, 11);
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
-        listWidget = new QListWidget(centralWidget);
-        listWidget->setObjectName(QStringLiteral("listWidget"));
-
-        gridLayout->addWidget(listWidget, 2, 0, 1, 4);
-
-        pushButton = new QPushButton(centralWidget);
-        pushButton->setObjectName(QStringLiteral("pushButton"));
+        pushButton_2 = new QPushButton(centralWidget);
+        pushButton_2->setObjectName(QStringLiteral("pushButton_2"));
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHeightForWidth(pushButton_2->sizePolicy().hasHeightForWidth());
+        pushButton_2->setSizePolicy(sizePolicy);
+
+        gridLayout->addWidget(pushButton_2, 0, 1, 1, 1);
+
+        treeWidget = new QTreeWidget(centralWidget);
+        treeWidget->setObjectName(QStringLiteral("treeWidget"));
+
+        gridLayout->addWidget(treeWidget, 2, 0, 1, 4);
+
+        pushButton = new QPushButton(centralWidget);
+        pushButton->setObjectName(QStringLiteral("pushButton"));
         sizePolicy.setHeightForWidth(pushButton->sizePolicy().hasHeightForWidth());
         pushButton->setSizePolicy(sizePolicy);
 
         gridLayout->addWidget(pushButton, 0, 0, 1, 1);
 
-        pushButton_4 = new QPushButton(centralWidget);
-        pushButton_4->setObjectName(QStringLiteral("pushButton_4"));
-        sizePolicy.setHeightForWidth(pushButton_4->sizePolicy().hasHeightForWidth());
-        pushButton_4->setSizePolicy(sizePolicy);
+        listWidget = new QListWidget(centralWidget);
+        listWidget->setObjectName(QStringLiteral("listWidget"));
 
-        gridLayout->addWidget(pushButton_4, 0, 3, 1, 1);
+        gridLayout->addWidget(listWidget, 3, 0, 1, 4);
 
         pushButton_3 = new QPushButton(centralWidget);
         pushButton_3->setObjectName(QStringLiteral("pushButton_3"));
@@ -98,20 +105,17 @@ public:
 
         gridLayout->addWidget(pushButton_3, 0, 2, 1, 1);
 
-        pushButton_2 = new QPushButton(centralWidget);
-        pushButton_2->setObjectName(QStringLiteral("pushButton_2"));
-        sizePolicy.setHeightForWidth(pushButton_2->sizePolicy().hasHeightForWidth());
-        pushButton_2->setSizePolicy(sizePolicy);
+        pushButton_4 = new QPushButton(centralWidget);
+        pushButton_4->setObjectName(QStringLiteral("pushButton_4"));
+        sizePolicy.setHeightForWidth(pushButton_4->sizePolicy().hasHeightForWidth());
+        pushButton_4->setSizePolicy(sizePolicy);
 
-        gridLayout->addWidget(pushButton_2, 0, 1, 1, 1);
+        gridLayout->addWidget(pushButton_4, 0, 3, 1, 1);
 
-        treeWidget = new QTreeWidget(centralWidget);
-        QTreeWidgetItem *__qtreewidgetitem = new QTreeWidgetItem();
-        __qtreewidgetitem->setText(0, QStringLiteral("1"));
-        treeWidget->setHeaderItem(__qtreewidgetitem);
-        treeWidget->setObjectName(QStringLiteral("treeWidget"));
+        customPlot = new QCustomPlot(centralWidget);
+        customPlot->setObjectName(QStringLiteral("customPlot"));
 
-        gridLayout->addWidget(treeWidget, 1, 0, 1, 4);
+        gridLayout->addWidget(customPlot, 1, 0, 1, 4);
 
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
@@ -153,10 +157,10 @@ public:
         actionmy_info->setText(QApplication::translate("MainWindow", "my info", Q_NULLPTR));
         actionAll_Processes->setText(QApplication::translate("MainWindow", "All Processes", Q_NULLPTR));
         actionUser_Processes->setText(QApplication::translate("MainWindow", "User Processes", Q_NULLPTR));
-        pushButton->setText(QApplication::translate("MainWindow", "System", Q_NULLPTR));
-        pushButton_4->setText(QApplication::translate("MainWindow", "File Systems", Q_NULLPTR));
-        pushButton_3->setText(QApplication::translate("MainWindow", "Resources", Q_NULLPTR));
         pushButton_2->setText(QApplication::translate("MainWindow", "Processes/Refresh", Q_NULLPTR));
+        pushButton->setText(QApplication::translate("MainWindow", "System", Q_NULLPTR));
+        pushButton_3->setText(QApplication::translate("MainWindow", "Resources", Q_NULLPTR));
+        pushButton_4->setText(QApplication::translate("MainWindow", "File Systems", Q_NULLPTR));
         menupush->setTitle(QApplication::translate("MainWindow", "Monitor", Q_NULLPTR));
         menuEdit->setTitle(QApplication::translate("MainWindow", "Edit", Q_NULLPTR));
         menuView->setTitle(QApplication::translate("MainWindow", "View", Q_NULLPTR));
