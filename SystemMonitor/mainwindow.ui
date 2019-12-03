@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>479</width>
-    <height>323</height>
+    <height>328</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,7 +29,13 @@
      </widget>
     </item>
     <item row="2" column="0" colspan="4">
-     <widget class="QTreeWidget" name="treeWidget"/>
+     <widget class="QTreeWidget" name="treeWidget">
+      <column>
+       <property name="text">
+        <string notr="true">1</string>
+       </property>
+      </column>
+     </widget>
     </item>
     <item row="0" column="0">
      <widget class="QPushButton" name="pushButton">
@@ -56,7 +62,7 @@
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Resources</string>
+       <string>Resources -  [CPU Usage / Memory and Swap / Network History]</string>
       </property>
      </widget>
     </item>

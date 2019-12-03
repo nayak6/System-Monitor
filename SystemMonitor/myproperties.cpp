@@ -16,6 +16,7 @@ MyProperties::MyProperties(QWidget *parent) :
 {
 
     ui->setupUi(this);
+    ui->listWidget->setBaseSize(25, 20);
 }
 
 MyProperties::~MyProperties()

@@ -102,21 +102,45 @@ void MainWindow::on_pushButton_clicked()
     struct sysinfo sys_info;
     sysinfo(&sys_info);
     QString availableMem = "Available Mem: ";
-    availableMem.append(QString::number(((sys_info.totalram * (unsigned long long) sys_info.mem_unit) / (1024 * 1024 * 1024))));
 
-    struct statvfs stat;
-    if (statvfs("/dev/null", &stat) != 0) {
-        printf("fdjngvflkd");
-    }
-    else {
-        ui->listWidget->addItem(releaseName);
-        ui->listWidget->addItem(versionName);
-        ui->listWidget->addItem(availableMem);
-        QString diskStorage = "Disk Storage: ";
-        diskStorage.append(QString::number((stat.f_blocks * stat.f_frsize) / (1024 * 1024 * 1024)));
-        ui->listWidget->addItem(diskStorage);
+    QFile file3("/proc/meminfo");
+    if(!file3.open(QIODevice::ReadOnly))
+        QMessageBox::information(0, "info", file3.errorString());
+    QTextStream in3(&file3);
+    QString line3 = in3.readLine();
+    while(!line3.isNull()) {
+        if (line3.contains("MemAvailable", Qt::CaseInsensitive)) {
+            QStringList list = line3.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+            availableMem.append(QString::number((list.at(1).toDouble()) / (1024 * 1024)) );
+            availableMem.append(" GiB");
+        }
+        line3 = in3.readLine();
     }
 
+    QString filename2 = "/sys/block/sda/size";
+    QFile file2(filename2);
+    if(!file2.open(QIODevice::ReadOnly))
+        QMessageBox::information(0, "info", file2.errorString());
+    QTextStream in2(&file2);
+    QString line2 = in2.readLine();
+
+    QString myHostName = "Hostname : ";
+    char hostname[1024];
+    gethostname(hostname, 1024);
+    myHostName.append(hostname);
+
+    ui->listWidget->addItem(myHostName);
+    ui->listWidget->addItem(releaseName);
+    ui->listWidget->addItem(versionName);
+    ui->listWidget->addItem(availableMem);
+
+
+
+    QString diskStorage = "Disk Storage: ";
+    bool ok = false;
+    diskStorage.append(QString::number((line2.toDouble(&ok) * 512)/(1024 * 1024 * 1024)));
+    diskStorage.append(" GiB");
+    ui->listWidget->addItem(diskStorage);
 }
 
 int filter(const struct dirent *dir)
@@ -133,6 +157,7 @@ int filter(const struct dirent *dir)
         perror("processdir() ==> stat()");
         exit(EXIT_FAILURE);
     }
+
     return !fnmatch("[1-9]*", dir->d_name, 0) && user == dirinfo.st_uid;
 }
 
@@ -165,8 +190,6 @@ double calculateCpuTime(QString pidd) {
     return cpu_time;
 }
 
-//my implementation
-
 //parent processes in a treewidget
 int MainWindow::AddParent(QString name, QString status, QString cpu, QString id, QString memory, QString ppid, int k)
 {
@@ -179,15 +202,6 @@ int MainWindow::AddParent(QString name, QString status, QString cpu, QString id,
     item->setText(4, memory + " MiB");
     item->setText(5, ppid);
     ui->treeWidget->addTopLevelItem(item);
-    //make a loop here and implement a counter for all the processes
-    //while subprocesses are there, addChild and increment count by 1.
-    //MainWindow::AddChild(item, name, status, cpu, id, memory);
-    //return the counter.
-
-//    int counter = k;
-//    while(counter--) {
-//        if(listname[counter]->d_name)
-//    }
 
     return count;
 }
@@ -206,7 +220,6 @@ void MainWindow::AddChild (QTreeWidgetItem *parent, QString name, QString status
 
 void MainWindow::killItem()
 {
-    //printf("I am here!");
     QList<QTreeWidgetItem*> sel_items = ui->treeWidget->selectedItems();
     for(int i=0; i<sel_items.size(); i++){
         kill(selectedPid.toInt(), SIGKILL);
@@ -216,21 +229,17 @@ void MainWindow::killItem()
 
 void MainWindow::stopItem()
 {
-    //printf("I am here!");
     QList<QTreeWidgetItem*> sel_items = ui->treeWidget->selectedItems();
     for(int i=0; i<sel_items.size(); i++){
         kill(selectedPid.toInt(), SIGSTOP);
-        //delete sel_items.at(i);
     }
 }
 
 void MainWindow::continueItem()
 {
-    //printf("I am here!");
     QList<QTreeWidgetItem*> sel_items = ui->treeWidget->selectedItems();
     for(int i=0; i<sel_items.size(); i++){
         kill(selectedPid.toInt(), SIGCONT);
-        //delete sel_items.at(i);
     }
 }
 
@@ -260,7 +269,7 @@ void MainWindow::listProperties() {
     propertiesNewWindow = new MyProperties();
     propertiesNewWindow->showProperties(selectedPid, selectedProcess,selectedCPU,selectedMemory,selectedState, cpuTime);
     propertiesNewWindow->show();
-//    this->hide(); //this will disappear main window
+   propertiesNewWindow->setAttribute( Qt::WA_DeleteOnClose );
 }
 
 void MainWindow::openMemMap()
@@ -271,6 +280,7 @@ void MainWindow::openMemMap()
         mapp = new MemMapMainWindow(this);
         mapp->setPid(selectedPid);
         mapp->show();
+        mapp->setAttribute( Qt::WA_DeleteOnClose );
     }
     else {
         QMessageBox mBox;
@@ -286,6 +296,7 @@ void MainWindow::openProcessFiles(){
         processFilesDialog = new ProcessFiles();
         processFilesDialog->listOpenFiles(selectedPid);
         processFilesDialog->show();
+        processFilesDialog->setAttribute( Qt::WA_DeleteOnClose );
     }
     else {
         QMessageBox mBox;
@@ -306,35 +317,35 @@ void MainWindow::on_treeWidget_customContextMenuRequested(const QPoint &pos)
     selectedCPU = item->text(2);
     selectedMemory = item->text(4);
 
-    QMenu menu(this);
-
-    //NULL in place of SLOT(newDev())
+    //QMenu menu(this);
+    QMenu* menu = new QMenu;
+    menu->setAttribute(Qt::WA_DeleteOnClose);
     QAction *action1 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Stop Process"), this);
     connect(action1, SIGNAL(triggered()), this, SLOT(stopItem()));
-    menu.addAction(action1);
+    menu->addAction(action1);
 
     QAction *action2 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Continue Process"), this);
     connect(action2, SIGNAL(triggered()), this, SLOT(continueItem()));
-    menu.addAction(action2);
+    menu->addAction(action2);
 
     QAction *action3 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Kill Process"), this);
     connect(action3, SIGNAL(triggered()), this, SLOT(killItem()));
-    menu.addAction(action3);
+    menu->addAction(action3);
 
     QAction *action4 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Memory Maps"), this);
     connect(action4, SIGNAL(triggered()), this, SLOT(openMemMap()));
-    menu.addAction(action4);
+    menu->addAction(action4);
 
     QAction *action5 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&List Open Files"), this);
     connect(action5, SIGNAL(triggered()), this, SLOT(openProcessFiles()));
-    menu.addAction(action5);
+    menu->addAction(action5);
 
     QAction *action6 = new QAction(QIcon(":/Resource/warning32.ico"),tr("&Properties"), this);
     connect(action6, SIGNAL(triggered()), this, SLOT(listProperties()));
-    menu.addAction(action6);
+    menu->addAction(action6);
 
     QPoint pt(pos);
-    menu.exec(tree->mapToGlobal(pos));
+    menu->exec(tree->mapToGlobal(pos));
 }
 
 void MainWindow::on_pushButton_2_clicked()
@@ -408,17 +419,16 @@ void MainWindow::on_pushButton_2_clicked()
                 QStringList list = memSize.split(QRegExp("\\s+"), QString::SkipEmptyParts);
                 QString memory = ( QString::number(list.at(1).toDouble(&ok) / 1024));
 
-                //returns i number of subprocesses that we can subtract from the n count loop
-//                int counter =
+
                 MainWindow::AddParent(name, status, cputime, id, memory, ppid, k);
-                //then use another loop to free all those namelist entries
-    //            for(int i = 0; i < counter; i++) {
-    //                free(namelist[n - i]);
-    //            }
 
             }
 
-            //free(namelist);
+            for(int i = 0; i < k; i++) {
+                free(namelist[i]);
+            }
+
+            free(namelist);
 
         }
     }
@@ -536,24 +546,27 @@ void MainWindow::realtimeDataSlot()
             update(1);
             for(int i =0; i < 8; i++) {
                 ui->customPlot->graph(i)->addData(key, cpuArray[i]);
-                //ui->customPlot->graph(i)->addData(key,cpu_usage[i]);
             }
+            ui->statusBar->showMessage(
+                  QString("Each Graph line shows one of the eight CPUs running!"), 0);
         }
 
         else if (graph_choice == 2) {
             //mem and swap
             update(2);
-            qDebug("%f %f",memory_usage, swap_usage);
             ui->customPlot->graph(0)->addData(key, memory_usage);
             ui->customPlot->graph(1)->addData(key, swap_usage);
+            ui->statusBar->showMessage(
+                  QString("Graph 1 is memory usage and Graph 2 is swap usage"), 0);
         }
 
         else {
             //network
             update(3);
-            qDebug("Rec : %f Sent : %f",diffReceived/1024, diffSent/1024);
             ui->customPlot->graph(0)->addData(key, diffReceived / 1024);
             ui->customPlot->graph(1)->addData(key, diffSent / 1024);
+            ui->statusBar->showMessage(
+                  QString("Graph 1 is received data and Graph 2 is sent data"), 0);
         }
       lastPointKey = key;
     }
@@ -623,7 +636,7 @@ void MainWindow::cpu_graph()
     ui->customPlot->xAxis->setTicker(timeTicker);
 
     ui->customPlot->axisRect()->setupFullAxesBox();
-    ui->customPlot->yAxis->setRange(12.5, 12.55);
+    ui->customPlot->yAxis->setRange(12, 13);
 
     // make left and bottom axes transfer their ranges to right and top axes:
     connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
@@ -775,36 +788,6 @@ void MainWindow::network_graph()
     previousReceived = received;
     previousSent = sent;
 
-
-//    QFile file2(filename);
-//    if(!file2.open(QIODevice::ReadOnly))
-//        QMessageBox::information(0, "info", file2.errorString());
-//    QTextStream in2(&file2);
-//    QString line2 = in2.readLine();
-//    line2 = in2.readLine();
-//    line2 = in2.readLine();
-
-//    received = 0;
-//    sent = 0;
-//    while(!line2.isNull()) {
-//       QStringList list = line2.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-//       received += list.at(1).toDouble(&ok);
-//       sent += list.at(9).toDouble(&ok);
-//       line2 = in2.readLine();
-//    }
-
-//    diffReceived = received - previousReceived;
-//    diffSent = sent - previousSent;
-
-
-
-//    qDebug("Recent Received : %f and Sent : %f", received, sent);
-//    qDebug("Prev Received : %f and Sent : %f", previousReceived, previousSent);
-//    qDebug("Diff Received : %f and Sent : %f", diffReceived, diffSent);
-
-//    previousReceived = received;
-//    previousSent = sent;
-
     ui->customPlot->addGraph();
     ui->customPlot->graph(0)->setPen(QPen(QColor(40, 110, 255)));
     ui->customPlot->addGraph();
@@ -945,9 +928,8 @@ void MainWindow::on_pushButton_4_clicked() {
         // Add Item
 
         ui->treeWidget->addTopLevelItem(item);
-
-
         line = in.readLine();
+
     }
 }
 
@@ -1018,8 +1000,6 @@ void MainWindow::allProcess() {
             else {
                 QStringList list = memSize.split(QRegExp("\\s+"), QString::SkipEmptyParts);
                 QString memory = ( QString::number(list.at(1).toDouble(&ok) / 1024));
-
-//                int counter =
                 MainWindow::AddParent(name, status, cputime, id, memory, ppid, k);
             }
         }
