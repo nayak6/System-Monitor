@@ -54,19 +54,23 @@ SOURCES       = ../SystemMonitor/main.cpp \
 		../SystemMonitor/mainwindow.cpp \
 		../SystemMonitor/myproperties.cpp \
 		../SystemMonitor/memmapmainwindow.cpp \
-		../SystemMonitor/processfiles.cpp moc_mainwindow.cpp \
+		../SystemMonitor/processfiles.cpp \
+		../SystemMonitor/qcustomplot.cpp moc_mainwindow.cpp \
 		moc_myproperties.cpp \
 		moc_memmapmainwindow.cpp \
-		moc_processfiles.cpp
+		moc_processfiles.cpp \
+		moc_qcustomplot.cpp
 OBJECTS       = main.o \
 		mainwindow.o \
 		myproperties.o \
 		memmapmainwindow.o \
 		processfiles.o \
+		qcustomplot.o \
 		moc_mainwindow.o \
 		moc_myproperties.o \
 		moc_memmapmainwindow.o \
-		moc_processfiles.o
+		moc_processfiles.o \
+		moc_qcustomplot.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -149,11 +153,13 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../SystemMonitor/SystemMonitor.pro ../SystemMonitor/mainwindow.h \
 		../SystemMonitor/myproperties.h \
 		../SystemMonitor/memmapmainwindow.h \
-		../SystemMonitor/processfiles.h ../SystemMonitor/main.cpp \
+		../SystemMonitor/processfiles.h \
+		../SystemMonitor/qcustomplot.h ../SystemMonitor/main.cpp \
 		../SystemMonitor/mainwindow.cpp \
 		../SystemMonitor/myproperties.cpp \
 		../SystemMonitor/memmapmainwindow.cpp \
-		../SystemMonitor/processfiles.cpp
+		../SystemMonitor/processfiles.cpp \
+		../SystemMonitor/qcustomplot.cpp
 QMAKE_TARGET  = SystemMonitor
 DESTDIR       = 
 TARGET        = SystemMonitor
@@ -349,8 +355,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../SystemMonitor/mainwindow.h ../SystemMonitor/myproperties.h ../SystemMonitor/memmapmainwindow.h ../SystemMonitor/processfiles.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../SystemMonitor/main.cpp ../SystemMonitor/mainwindow.cpp ../SystemMonitor/myproperties.cpp ../SystemMonitor/memmapmainwindow.cpp ../SystemMonitor/processfiles.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../SystemMonitor/mainwindow.h ../SystemMonitor/myproperties.h ../SystemMonitor/memmapmainwindow.h ../SystemMonitor/processfiles.h ../SystemMonitor/qcustomplot.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../SystemMonitor/main.cpp ../SystemMonitor/mainwindow.cpp ../SystemMonitor/myproperties.cpp ../SystemMonitor/memmapmainwindow.cpp ../SystemMonitor/processfiles.cpp ../SystemMonitor/qcustomplot.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../SystemMonitor/mainwindow.ui ../SystemMonitor/myproperties.ui ../SystemMonitor/memmapmainwindow.ui ../SystemMonitor/processfiles.ui $(DISTDIR)/
 
 
@@ -383,9 +389,9 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 	g++ -pipe -g -Wall -W -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_mainwindow.cpp moc_myproperties.cpp moc_memmapmainwindow.cpp moc_processfiles.cpp
+compiler_moc_header_make_all: moc_mainwindow.cpp moc_myproperties.cpp moc_memmapmainwindow.cpp moc_processfiles.cpp moc_qcustomplot.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_mainwindow.cpp moc_myproperties.cpp moc_memmapmainwindow.cpp moc_processfiles.cpp
+	-$(DEL_FILE) moc_mainwindow.cpp moc_myproperties.cpp moc_memmapmainwindow.cpp moc_processfiles.cpp moc_qcustomplot.cpp
 moc_mainwindow.cpp: ../SystemMonitor/myproperties.h \
 		../SystemMonitor/memmapmainwindow.h \
 		../SystemMonitor/processfiles.h \
@@ -408,6 +414,11 @@ moc_processfiles.cpp: ../SystemMonitor/processfiles.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/u/riker/u92/nayak6/cs252/lab6/System-Monitor/SystemMonitor -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtPrintSupport -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../SystemMonitor/processfiles.h -o moc_processfiles.cpp
+
+moc_qcustomplot.cpp: ../SystemMonitor/qcustomplot.h \
+		moc_predefs.h \
+		/usr/lib/qt5/bin/moc
+	/usr/lib/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/u/riker/u92/nayak6/cs252/lab6/System-Monitor/SystemMonitor -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtPrintSupport -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../SystemMonitor/qcustomplot.h -o moc_qcustomplot.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
@@ -465,6 +476,9 @@ processfiles.o: ../SystemMonitor/processfiles.cpp ../SystemMonitor/processfiles.
 		ui_processfiles.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o processfiles.o ../SystemMonitor/processfiles.cpp
 
+qcustomplot.o: ../SystemMonitor/qcustomplot.cpp ../SystemMonitor/qcustomplot.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qcustomplot.o ../SystemMonitor/qcustomplot.cpp
+
 moc_mainwindow.o: moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_mainwindow.o moc_mainwindow.cpp
 
@@ -476,6 +490,9 @@ moc_memmapmainwindow.o: moc_memmapmainwindow.cpp
 
 moc_processfiles.o: moc_processfiles.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_processfiles.o moc_processfiles.cpp
+
+moc_qcustomplot.o: moc_qcustomplot.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_qcustomplot.o moc_qcustomplot.cpp
 
 ####### Install
 
