@@ -119,6 +119,22 @@ void MyProperties::showProperties(QString processID, QString processName, QStrin
     QString line3 = in3.readLine();
     QString cmdLine = line3;
 
+    QString filename4 = "/proc/";
+    filename4 += (processID);
+    filename4 += ("/cgroup");
+    QFile file4(filename4);
+    if(!file4.open(QIODevice::ReadOnly))
+        QMessageBox::information(0, "info", file4.errorString());
+    QTextStream in4(&file4);
+    QString line4 = in4.readLine();
+    QString ctrlGroup = line4;
+    while (!line4.isNull()) {
+        ctrlGroup.append(", ");
+        ctrlGroup.append(line4);
+        line4 = in4.readLine();
+    }
+
+
     // Writing Values
 
     QString status = "Status                    " + currentState;
@@ -154,12 +170,12 @@ void MyProperties::showProperties(QString processID, QString processName, QStrin
     ui->listWidget->addItem(prVal);
     QString pid = "ID                                 " + processID;
     ui->listWidget->addItem(pid);
-    QString sContext = "Security Context                  -----";
+    QString sContext = "Security Context            N/A";
     ui->listWidget->addItem(sContext);
-    QString cmd = "Command Line                        " + cmdLine;
+    QString cmd = "Command Line                 " + cmdLine;
     ui->listWidget->addItem(cmd);
-    QString wChannel = "Waiting Channel                     0";
+    QString wChannel = "Waiting Channel              0";
     ui->listWidget->addItem(wChannel);
-    QString cGroup = "Control Group                    /usr/.cdsl";
+    QString cGroup = "Control Group                 " + ctrlGroup;
     ui->listWidget->addItem(cGroup);
 }
